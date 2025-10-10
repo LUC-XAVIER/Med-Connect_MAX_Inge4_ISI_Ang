@@ -1,0 +1,99 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    
+    /* Modules */
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "baseUrl": "./src",
+    "paths": {
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@services/*": ["services/*"],
+      "@repositories/*": ["repositories/*"],
+      "@models/*": ["models/*"],
+      "@middleware/*": ["middleware/*"],
+      "@routes/*": ["routes/*"],
+      "@utils/*": ["utils/*"],
+      "@types/*": ["types/*"]
+    },
+    "resolveJsonModule": true,
+    
+    /* Emit */
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": true,
+    
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    /* Type Checking */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    
+    /* Completeness */
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
+}
+
+
+
+
+
+
+
+// {
+//   // Visit https://aka.ms/tsconfig to read more about this file
+//   "compilerOptions": {
+//     // File Layout
+//     // "rootDir": "./src",
+//     // "outDir": "./dist",
+
+//     // Environment Settings
+//     // See also https://aka.ms/tsconfig/module
+//     "module": "nodenext",
+//     "target": "esnext",
+//     "types": [],
+//     // For nodejs:
+//     // "lib": ["esnext"],
+//     // "types": ["node"],
+//     // and npm install -D @types/node
+
+//     // Other Outputs
+//     "sourceMap": true,
+//     "declaration": true,
+//     "declarationMap": true,
+
+//     // Stricter Typechecking Options
+//     "noUncheckedIndexedAccess": true,
+//     "exactOptionalPropertyTypes": true,
+
+//     // Style Options
+//     // "noImplicitReturns": true,
+//     // "noImplicitOverride": true,
+//     // "noUnusedLocals": true,
+//     // "noUnusedParameters": true,
+//     // "noFallthroughCasesInSwitch": true,
+//     // "noPropertyAccessFromIndexSignature": true,
+
+//     // Recommended Options
+//     "strict": true,
+//     "jsx": "react-jsx",
+//     "verbatimModuleSyntax": true,
+//     "isolatedModules": true,
+//     "noUncheckedSideEffectImports": true,
+//     "moduleDetection": "force",
+//     "skipLibCheck": true,
+//   }
+// }
