@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -6,15 +6,6 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 import { errorHandler } from '@middleware/errorHandler';
-import logger from '@utils/logger';
-
-// Import routes (we'll create these later)
-import authRoutes from '@routes/authRoutes';
-import patientRoutes from '@routes/patientRoutes';
-import doctorRoutes from '@routes/doctorRoutes';
-import recordRoutes from '@routes/recordRoutes';
-import connectionRoutes from '@routes/connectionRoutes';
-import messageRoutes from '@routes/messageRoutes';
 
 dotenv.config();
 
@@ -45,32 +36,6 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api', limiter);
-
-// Health check route
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    message: 'Med-Connect API is running',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// API routes
-const API_VERSION = process.env.API_VERSION || 'v1';
-app.use(`/api/${API_VERSION}/auth`, authRoutes);
-app.use(`/api/${API_VERSION}/patients`, patientRoutes);
-app.use(`/api/${API_VERSION}/doctors`, doctorRoutes);
-app.use(`/api/${API_VERSION}/records`, recordRoutes);
-app.use(`/api/${API_VERSION}/connections`, connectionRoutes);
-app.use(`/api/${API_VERSION}/messages`, messageRoutes);
-
-// 404 handler
-app.use('*', (req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found',
-  });
-});
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

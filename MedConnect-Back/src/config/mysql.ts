@@ -17,7 +17,7 @@ const poolConfig: PoolOptions = {
 
 const pool: Pool = mysql.createPool(poolConfig);
 
-// Test connection
+ // Test connection
 pool.getConnection()
   .then((connection) => {
     logger.info('✅ MySQL connected successfully');
@@ -27,4 +27,16 @@ pool.getConnection()
     logger.error('❌ MySQL connection error:', err);
   });
 
-export default pool;
+const connectMySQL = async (): Promise<void> => {
+  try {
+    const connection = await pool.getConnection();
+    await connection.ping(); // optional: verifies the connection
+    logger.info('✅ MySQL connected successfully');
+    connection.release();
+  } catch (error) {
+    logger.error('❌ MySQL connection error:', error);
+    process.exit(1);
+  }
+};
+
+export default { pool, connectMySQL };

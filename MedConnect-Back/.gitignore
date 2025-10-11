@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# TypeScript
+dist/
+*.tsbuildinfo
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
