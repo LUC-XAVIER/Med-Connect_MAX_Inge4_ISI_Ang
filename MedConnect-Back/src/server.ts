@@ -1,6 +1,6 @@
 import app from './app';
 import connectMongoDB from '@config/mongoose';
-import pool from '@config/mysql';
+import { connectMySQL } from '@config/mysql';
 import logger from '@utils/logger';
 import dotenv from 'dotenv';
 
@@ -12,7 +12,7 @@ const startServer = async (): Promise<void> => {
   try {
     // Connect to MongoDB
     await connectMongoDB();
-    await pool.connectMySQL();
+    await connectMySQL();
 
     // MySQL connection is initialized in mysql.ts config file
 

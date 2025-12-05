@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 import { errorHandler } from '@middleware/errorHandler';
+import authRoutes from './routes/authRoutes';
 
 dotenv.config();
 
@@ -36,6 +37,11 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api', limiter);
+
+// Routes
+// Use auth routes
+const API_VERSION = process.env.API_VERSION || 'v1';
+app.use(`/api/${API_VERSION}/auth`, authRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

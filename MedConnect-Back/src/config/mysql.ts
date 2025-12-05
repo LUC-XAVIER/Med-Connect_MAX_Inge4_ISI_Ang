@@ -39,4 +39,5 @@ const connectMySQL = async (): Promise<void> => {
   }
 };
 
-export default { pool, connectMySQL };
+export default pool;
+export { connectMySQL };
