@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 
 import { errorHandler } from '@middleware/errorHandler';
 import authRoutes from './routes/authRoutes';
+import patientRoutes from './routes/patientRoutes';
+import doctorRoutes from './routes/doctorRoutes';
 
 dotenv.config();
 
@@ -39,9 +41,10 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Routes
-// Use auth routes
 const API_VERSION = process.env.API_VERSION || 'v1';
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
+app.use(`/api/${API_VERSION}/patients`, patientRoutes);
+app.use(`/api/${API_VERSION}/doctors`, doctorRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

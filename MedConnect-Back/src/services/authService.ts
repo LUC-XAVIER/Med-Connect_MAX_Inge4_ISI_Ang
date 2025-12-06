@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import type { Secret, SignOptions } from 'jsonwebtoken';
-import userRepository from '../repositories/userRepo';
+import userRepository from '../repositories/userRepository';
 import { ILoginCredentials, IAuthResponse, IRegisterPatient, IRegisterDoctor } from '../models/mysql/User';
 import { AppError } from '../middleware/errorHandler';
 import { HTTP_STATUS, ERROR_MESSAGES } from '../utils/constants';
