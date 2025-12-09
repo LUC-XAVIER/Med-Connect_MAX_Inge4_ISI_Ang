@@ -245,3 +245,61 @@ export const updateDoctorProfileValidation = [
     .isLength({ max: 1000 })
     .withMessage('Bio must be less than 1000 characters'),
 ];
+
+// Validation rules for uploading medical record
+export const uploadRecordValidation = [
+  body('title')
+    .trim()
+    .notEmpty()
+    .withMessage('Title is required')
+    .isLength({ min: 3, max: 255 })
+    .withMessage('Title must be between 3 and 255 characters'),
+  
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must be less than 1000 characters'),
+  
+  body('record_type')
+    .notEmpty()
+    .withMessage('Record type is required')
+    .isIn(['lab_result', 'x_ray', 'prescription', 'doctor_note', 'imaging_report', 'other'])
+    .withMessage('Invalid record type'),
+  
+  body('record_date')
+    .notEmpty()
+    .withMessage('Record date is required')
+    .isISO8601()
+    .withMessage('Please provide a valid date'),
+];
+
+// Validation rules for updating medical record
+export const updateRecordValidation = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 255 })
+    .withMessage('Title must be between 3 and 255 characters'),
+  
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must be less than 1000 characters'),
+  
+  body('record_type')
+    .optional()
+    .isIn(['lab_result', 'x_ray', 'prescription', 'doctor_note', 'imaging_report', 'other'])
+    .withMessage('Invalid record type'),
+  
+  body('record_date')
+    .optional()
+    .isISO8601()
+    .withMessage('Please provide a valid date'),
+  
+  body('tags')
+    .optional()
+    .isArray()
+    .withMessage('Tags must be an array'),
+];

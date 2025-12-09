@@ -1,5 +1,5 @@
 import app from './app';
-import connectMongoDB from '@config/mongoose';
+import { connectMongoDB } from '@config/mongodb';
 import { connectMySQL } from '@config/mysql';
 import logger from '@utils/logger';
 import dotenv from 'dotenv';

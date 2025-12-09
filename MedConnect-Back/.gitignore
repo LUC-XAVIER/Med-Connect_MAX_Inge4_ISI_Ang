@@ -14,9 +14,10 @@ dist/
 logs/
 *.log
 
-# Uploads
-uploads/*
+# Uploads (keep folder structure, ignore files)
+uploads/**/*
 !uploads/.gitkeep
+!uploads/medical-records/.gitkeep
 
 # OS files
 .DS_Store

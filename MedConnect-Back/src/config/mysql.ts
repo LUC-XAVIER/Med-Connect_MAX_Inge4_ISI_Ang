@@ -19,11 +19,11 @@ const pool: Pool = mysql.createPool(poolConfig);
 
  // Test connection
 pool.getConnection()
-  .then((connection) => {
+  .then((connection: any) => {
     logger.info('✅ MySQL connected successfully');
     connection.release();
   })
-  .catch((err) => {
+  .catch((err: any) => {
     logger.error('❌ MySQL connection error:', err);
   });
 
