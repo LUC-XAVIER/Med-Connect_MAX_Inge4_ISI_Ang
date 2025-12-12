@@ -6,6 +6,8 @@ export interface IDoctor {
   hospital_affiliation?: string;
   verified: boolean;
   bio?: string;
+  rating: number; 
+  total_ratings: number; 
   created_at: Date;
 }
 

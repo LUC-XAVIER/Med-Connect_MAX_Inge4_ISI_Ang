@@ -303,3 +303,148 @@ export const updateRecordValidation = [
     .isArray()
     .withMessage('Tags must be an array'),
 ];
+
+
+// Doctor rating validation
+export const rateDoctorValidation = [
+  body('rating')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be between 1 and 5'),
+  
+  body('review')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Review must be less than 500 characters'),
+];
+
+// Prescription validation
+export const createPrescriptionValidation = [
+  body('patient_id')
+    .isInt()
+    .withMessage('Patient ID must be an integer'),
+  
+  body('diagnosis')
+    .notEmpty()
+    .withMessage('Diagnosis is required')
+    .isLength({ min: 10, max: 1000 })
+    .withMessage('Diagnosis must be between 10 and 1000 characters'),
+  
+  body('notes')
+    .optional()
+    .isLength({ max: 1000 })
+    .withMessage('Notes must be less than 1000 characters'),
+  
+  body('medications')
+    .isArray({ min: 1 })
+    .withMessage('At least one medication is required'),
+  
+  body('medications.*.medication_name')
+    .notEmpty()
+    .withMessage('Medication name is required'),
+  
+  body('medications.*.dosage')
+    .notEmpty()
+    .withMessage('Dosage is required'),
+  
+  body('medications.*.frequency')
+    .notEmpty()
+    .withMessage('Frequency is required'),
+  
+  body('medications.*.duration')
+    .notEmpty()
+    .withMessage('Duration is required'),
+];
+
+// Appointment validation
+export const createAppointmentValidation = [
+  body('doctor_id')
+    .isInt()
+    .withMessage('Doctor ID must be an integer'),
+  
+  body('appointment_date')
+    .isISO8601()
+    .withMessage('Please provide a valid date')
+    .custom((value) => {
+      const appointmentDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (appointmentDate < today) {
+        throw new Error('Appointment date cannot be in the past');
+      }
+      return true;
+    }),
+  
+  body('appointment_time')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Please provide a valid time in HH:MM format'),
+  
+  body('duration')
+    .optional()
+    .isInt({ min: 15, max: 180 })
+    .withMessage('Duration must be between 15 and 180 minutes'),
+  
+  body('reason')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Reason must be less than 500 characters'),
+];
+
+// Update appointment status validation
+export const updateAppointmentStatusValidation = [
+  body('status')
+    .isIn(['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'])
+    .withMessage('Invalid status'),
+  
+  body('notes')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Notes must be less than 500 characters'),
+];
+
+// Reschedule appointment validation
+export const rescheduleAppointmentValidation = [
+  body('appointment_date')
+    .isISO8601()
+    .withMessage('Please provide a valid date')
+    .custom((value) => {
+      const appointmentDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (appointmentDate < today) {
+        throw new Error('Appointment date cannot be in the past');
+      }
+      return true;
+    }),
+  
+  body('appointment_time')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Please provide a valid time in HH:MM format'),
+];
+
+// Password reset request validation
+export const requestPasswordResetValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
+];
+
+// Password reset validation
+export const resetPasswordValidation = [
+  body('token')
+    .notEmpty()
+    .withMessage('Reset token is required'),
+  
+  body('new_password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+];
+
+// Update prescription status validation
+export const updatePrescriptionStatusValidation = [
+  body('status')
+    .isIn(['active', 'completed', 'cancelled'])
+    .withMessage('Status must be active, completed, or cancelled'),
+];

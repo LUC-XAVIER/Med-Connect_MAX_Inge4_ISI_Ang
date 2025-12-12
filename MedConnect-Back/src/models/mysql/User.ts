@@ -7,6 +7,7 @@ export interface IUser {
   role: 'patient' | 'doctor' | 'admin';
   contact?: string;
   address?: string;
+  profile_picture?: string; 
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
