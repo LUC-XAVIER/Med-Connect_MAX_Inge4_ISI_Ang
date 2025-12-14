@@ -448,3 +448,23 @@ export const updatePrescriptionStatusValidation = [
     .isIn(['active', 'completed', 'cancelled'])
     .withMessage('Status must be active, completed, or cancelled'),
 ];
+
+// Validation for connection request
+export const requestConnectionValidation = [
+  body('doctor_user_id')
+    .isInt()
+    .withMessage('Doctor user ID must be an integer')
+    .notEmpty()
+    .withMessage('Doctor user ID is required'),
+];
+
+// Validation for sharing records
+export const shareRecordsValidation = [
+  body('record_ids')
+    .isArray({ min: 1 })
+    .withMessage('Please provide at least one record ID'),
+  
+  body('record_ids.*')
+    .isString()
+    .withMessage('Each Record ID must be a string'),
+];

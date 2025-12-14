@@ -19,6 +19,7 @@ import doctorRatingRoutes from './routes/doctorRatingRoutes';
 import prescriptionRoutes from './routes/prescriptionRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
+import connectionRoutes from './routes/connectionRoutes';
 
 dotenv.config();
 
@@ -73,6 +74,7 @@ app.use(`/api/${API_VERSION}/doctors`, doctorRatingRoutes);
 app.use(`/api/${API_VERSION}/prescriptions`, prescriptionRoutes);
 app.use(`/api/${API_VERSION}/appointments`, appointmentRoutes);
 app.use(`/api/${API_VERSION}/password-reset`, passwordResetRoutes);
+app.use(`/api/${API_VERSION}/connections`, connectionRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

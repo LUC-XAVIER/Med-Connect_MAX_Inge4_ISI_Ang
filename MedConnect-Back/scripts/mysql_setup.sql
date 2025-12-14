@@ -126,6 +126,7 @@ CREATE TABLE doctors (
     bio TEXT,
     rating DECIMAL(3, 2) DEFAULT 0.00,
     total_ratings INT DEFAULT 0,
+    working_hours JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     INDEX idx_specialty (specialty),

@@ -3,21 +3,20 @@ import connectionService from '../services/connectionService';
 import { HTTP_STATUS } from '../utils/constants';
 
 export class ConnectionController {
-  // Doctor sends connection request to patient
+  // Patient sends connection request to doctor
   async requestConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const doctorUserId = req.user?.user_id;
-      const { patient_user_id } = req.body;
-
-      if (!doctorUserId) {
+      const patientUserId = req.user?.user_id;
+      const { doctor_user_id } = req.body;
+      if (!patientUserId) {
         res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          message: 'Doctor not authenticated',
+          message: 'Patient not authenticated',
         });
         return;
       }
 
-      const connection = await connectionService.requestConnection(doctorUserId, patient_user_id);
+      const connection = await connectionService.requestConnection(doctor_user_id, patientUserId);
 
       res.status(HTTP_STATUS.CREATED).json({
         success: true,
@@ -29,21 +28,21 @@ export class ConnectionController {
     }
   }
 
-  // Patient approves connection
+  // Doctor approves connection
   async approveConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const patientUserId = req.user?.user_id;
+      const doctorUserId = req.user?.user_id;
       const connectionId = parseInt(req.params.connectionId);
 
-      if (!patientUserId) {
+      if (!doctorUserId) {
         res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          message: 'Patient not authenticated',
+          message: 'Doctor not authenticated',
         });
         return;
       }
 
-      const connection = await connectionService.approveConnection(connectionId, patientUserId);
+      const connection = await connectionService.approveConnection(connectionId, doctorUserId);
 
       res.status(HTTP_STATUS.OK).json({
         success: true,
@@ -55,21 +54,21 @@ export class ConnectionController {
     }
   }
 
-  // Patient rejects connection
+  // Doctor rejects connection
   async rejectConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const patientUserId = req.user?.user_id;
+      const doctorUserId = req.user?.user_id;
       const connectionId = parseInt(req.params.connectionId);
 
-      if (!patientUserId) {
+      if (!doctorUserId) {
         res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          message: 'Patient not authenticated',
+          message: 'Doctor not authenticated',
         });
         return;
       }
 
-      const connection = await connectionService.rejectConnection(connectionId, patientUserId);
+      const connection = await connectionService.rejectConnection(connectionId, doctorUserId);
 
       res.status(HTTP_STATUS.OK).json({
         success: true,
@@ -81,21 +80,21 @@ export class ConnectionController {
     }
   }
 
-  // Patient revokes connection
+  // Doctor revokes connection
   async revokeConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const patientUserId = req.user?.user_id;
+      const doctorUserId = req.user?.user_id;
       const connectionId = parseInt(req.params.connectionId);
 
-      if (!patientUserId) {
+      if (!doctorUserId) {
         res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          message: 'Patient not authenticated',
+          message: 'Doctor not authenticated',
         });
         return;
       }
 
-      await connectionService.revokeConnection(connectionId, patientUserId);
+      await connectionService.revokeConnection(connectionId, doctorUserId);
 
       res.status(HTTP_STATUS.OK).json({
         success: true,

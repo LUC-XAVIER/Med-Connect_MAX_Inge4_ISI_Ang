@@ -7,7 +7,7 @@ import { HTTP_STATUS } from '../utils/constants';
 import logger from '../utils/logger';
 
 export class ConnectionService {
-  // Doctor sends connection request to patient
+  // Patient sends connection request to doctor
   async requestConnection(doctorUserId: number, patientUserId: number): Promise<any> {
     // Get doctor profile
     const doctor = await doctorRepository.findByUserId(doctorUserId);
@@ -59,17 +59,17 @@ export class ConnectionService {
     return connection;
   }
 
-  // Patient approves connection request
-  async approveConnection(connectionId: number, patientUserId: number): Promise<any> {
+  // Doctor approves connection request
+  async approveConnection(connectionId: number, doctorUserId: number): Promise<any> {
     const connection = await connectionRepository.findById(connectionId);
 
     if (!connection) {
       throw new AppError('Connection not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Verify patient owns this connection
-    const patient = await patientRepository.findByUserId(patientUserId);
-    if (!patient || patient.patient_id !== connection.patient_id) {
+    // Verify doctor owns this connection
+    const doctor = await doctorRepository.findByUserId(doctorUserId);
+    if (!doctor || doctor.doctor_id !== connection.doctor_id) {
       throw new AppError('Unauthorized: You can only approve your own connection requests', HTTP_STATUS.FORBIDDEN);
     }
 
@@ -84,17 +84,17 @@ export class ConnectionService {
     return updated;
   }
 
-  // Patient rejects connection request
-  async rejectConnection(connectionId: number, patientUserId: number): Promise<any> {
+  // Doctor rejects connection request
+  async rejectConnection(connectionId: number, doctorUserId: number): Promise<any> {
     const connection = await connectionRepository.findById(connectionId);
 
     if (!connection) {
       throw new AppError('Connection not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Verify patient owns this connection
-    const patient = await patientRepository.findByUserId(patientUserId);
-    if (!patient || patient.patient_id !== connection.patient_id) {
+    // Verify doctor owns this connection
+    const doctor = await doctorRepository.findByUserId(doctorUserId);
+    if (!doctor || doctor.doctor_id !== connection.doctor_id) {
       throw new AppError('Unauthorized', HTTP_STATUS.FORBIDDEN);
     }
 
@@ -109,17 +109,17 @@ export class ConnectionService {
     return updated;
   }
 
-  // Patient revokes connection (remove doctor access)
-  async revokeConnection(connectionId: number, patientUserId: number): Promise<void> {
+  // Doctor revokes connection (remove patient access)
+  async revokeConnection(connectionId: number, doctorUserId: number): Promise<void> {
     const connection = await connectionRepository.findById(connectionId);
 
     if (!connection) {
       throw new AppError('Connection not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Verify patient owns this connection
-    const patient = await patientRepository.findByUserId(patientUserId);
-    if (!patient || patient.patient_id !== connection.patient_id) {
+    // Verify doctor owns this connection
+    const doctor = await doctorRepository.findByUserId(doctorUserId);
+    if (!doctor || doctor.doctor_id !== connection.doctor_id) {
       throw new AppError('Unauthorized', HTTP_STATUS.FORBIDDEN);
     }
 
