@@ -68,7 +68,7 @@ export class AuthController {
   }
 
   // Get current user profile
-  async getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<Response |void> {
+  async getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<Response|void> {
     try {
       const userId = req.user?.user_id;
 

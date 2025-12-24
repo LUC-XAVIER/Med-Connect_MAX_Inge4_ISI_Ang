@@ -20,6 +20,7 @@ import prescriptionRoutes from './routes/prescriptionRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
 import connectionRoutes from './routes/connectionRoutes';
+import messageRoutes from './routes/messageRoutes';
 
 dotenv.config();
 
@@ -37,6 +38,9 @@ app.use(cors({
 // Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from public folder
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -75,6 +79,7 @@ app.use(`/api/${API_VERSION}/prescriptions`, prescriptionRoutes);
 app.use(`/api/${API_VERSION}/appointments`, appointmentRoutes);
 app.use(`/api/${API_VERSION}/password-reset`, passwordResetRoutes);
 app.use(`/api/${API_VERSION}/connections`, connectionRoutes);
+app.use(`/api/${API_VERSION}/messages`, messageRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
