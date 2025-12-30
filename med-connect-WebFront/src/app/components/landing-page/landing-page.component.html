@@ -1,0 +1,282 @@
+<!-- Navigation Header -->
+<header class="header">
+  <div class="container">
+    <nav class="navbar">
+      <div class="logo">Med-Connect.</div>
+      <ul class="nav-menu" [class.active]="menuActive">
+        <li><a href="#home" (click)="scrollToSection('home')">Home</a></li>
+        <li><a href="#about" (click)="scrollToSection('about')">About</a></li>
+        <li><a href="#services" (click)="scrollToSection('services')">Services</a></li>
+        <li><a href="#blog" (click)="scrollToSection('blog')">Blog</a></li>
+        <li><a href="#contact" (click)="scrollToSection('contact')">Contact</a></li>
+      </ul>
+      <button class="cta-button" routerLink="/login">Make an Appointment</button>
+      <div class="hamburger" (click)="toggleMenu()" [class.active]="menuActive">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section id="home" class="hero-section">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="decorative-circle"></div>
+        <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=600&fit=crop" alt="Medical Professional" class="hero-image-main fade-in">
+        <img src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=400&h=500&fit=crop" alt="Patient Consultation" class="hero-image-secondary slide-up">
+      </div>
+      <div class="hero-right">
+        <h1 class="hero-title fade-in-up">
+          Your Health Records,<br>Securely Connected
+        </h1>
+        <p class="hero-subtitle fade-in-up delay-1">
+          Access your complete medical history anytime, anywhere. Share with doctors seamlessly.
+        </p>
+        <button class="service-button fade-in-up delay-2" routerLink="/login">Get Started</button>
+
+        <div class="hero-cards">
+          <div class="hero-card fade-in-up delay-3">
+            <div class="card-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3>Secure Storage</h3>
+            <p>Your medical records protected with end-to-end encryption and HIPAA compliance</p>
+          </div>
+
+          <div class="hero-card fade-in-up delay-4">
+            <div class="card-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h3>Doctor Access</h3>
+            <p>Instantly share your health history with healthcare providers worldwide</p>
+          </div>
+
+          <div class="hero-card fade-in-up delay-5">
+            <div class="card-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3>24/7 Access</h3>
+            <p>Access your records anytime from any device with secure cloud storage</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-wave">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+  </div>
+</section>
+
+<!-- Image Carousel Section -->
+<section id="services" class="carousel-section">
+  <div class="container">
+    <h2 class="section-title center">How Med-Connect Works</h2>
+    <p class="section-subtitle center">Simple steps to take control of your health records</p>
+
+    <div class="carousel-container">
+      <div class="carousel-slide" [class.active]="currentSlide === 0">
+        <div class="slide-content">
+          <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=400&fit=crop" alt="Upload Records">
+          <div class="slide-text">
+            <h3>1. Upload Your Records</h3>
+            <p>Easily upload lab results, prescriptions, imaging reports, and medical documents in any format</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="carousel-slide" [class.active]="currentSlide === 1">
+        <div class="slide-content">
+          <img src="https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=600&h=400&fit=crop" alt="Organize Records">
+          <div class="slide-text">
+            <h3>2. Organize & Categorize</h3>
+            <p>Automatically categorize your health records and create a comprehensive health timeline</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="carousel-slide" [class.active]="currentSlide === 2">
+        <div class="slide-content">
+          <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&h=400&fit=crop" alt="Connect with Doctors">
+          <div class="slide-text">
+            <h3>3. Connect with Doctors</h3>
+            <p>Search and connect with verified healthcare professionals to share your medical history</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="carousel-slide" [class.active]="currentSlide === 3">
+        <div class="slide-content">
+          <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=400&fit=crop" alt="Share Securely">
+          <div class="slide-text">
+            <h3>4. Share Securely</h3>
+            <p>Control who sees your records and revoke access anytime with a single click</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="carousel-arrow prev" (click)="previousSlide()">‹</button>
+      <button class="carousel-arrow next" (click)="nextSlide()">›</button>
+
+      <div class="carousel-dots">
+        @for (slide of [0,1,2,3]; track slide) {
+          <span class="dot" [class.active]="currentSlide === slide" (click)="goToSlide(slide)"></span>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="about-section">
+  <div class="container">
+    <div class="about-content">
+      <div class="about-images">
+        <div class="about-image-wrapper zoom-in">
+          <div class="green-overlay"></div>
+          <img src="https://images.unsplash.com/photo-1584515933487-779824d29309?w=500&h=600&fit=crop" alt="Patient Reading" class="about-img-1">
+        </div>
+        <div class="about-image-wrapper zoom-in delay-2">
+          <div class="green-circle"></div>
+          <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=500&fit=crop" alt="Doctor" class="about-img-2">
+        </div>
+      </div>
+      <div class="about-text">
+        <h2 class="section-title fade-in-up">Take Control of<br>Your Health Journey!</h2>
+        <p class="section-subtitle fade-in-up delay-1">Empowering patients and doctors with secure, accessible medical records</p>
+        <p class="section-description fade-in-up delay-2">
+          Med-Connect revolutionizes healthcare by giving you complete ownership of your medical history.
+          No more lost records, repeated tests, or incomplete patient files. Everything you need, when you need it,
+          accessible from anywhere in the world.
+        </p>
+        <div class="about-icons fade-in-up delay-3">
+          <div class="icon-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div class="icon-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Blog Section -->
+<section id="blog" class="blog-section">
+  <div class="container">
+    <h2 class="section-title center fade-in-up">Latest Updates</h2>
+    <div class="blog-grid">
+      @for (blog of blogs; track blog.title; let i = $index) {
+        <div class="blog-card fade-in-up" [style.animation-delay]="i * 0.1 + 's'">
+          <div class="blog-image">
+            <img [src]="blog.image" [alt]="blog.title">
+            <div class="blog-overlay"></div>
+          </div>
+          <div class="blog-content">
+            <h3>{{ blog.title }}</h3>
+            <p>{{ blog.description }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="testimonials-section">
+  <div class="container">
+    <div class="testimonial-content">
+      <div class="quote-icon">"</div>
+      <p class="testimonial-text fade-in-up">
+        {{ testimonials[currentTestimonial].text }}
+      </p>
+      <div class="testimonial-author fade-in-up delay-1">
+        <img [src]="testimonials[currentTestimonial].image" [alt]="testimonials[currentTestimonial].author">
+        <div class="author-info">
+          <h4>{{ testimonials[currentTestimonial].author }}</h4>
+          <p>{{ testimonials[currentTestimonial].position }}</p>
+        </div>
+      </div>
+      <div class="testimonial-nav">
+        <button class="nav-arrow" (click)="previousTestimonial()">←</button>
+        <span class="nav-indicator">{{ currentTestimonial + 1 }} / {{ testimonials.length }}</span>
+        <button class="nav-arrow" (click)="nextTestimonial()">→</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer id="contact" class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3 class="footer-logo">Med-Connect.</h3>
+        <p class="footer-description">Empowering patients with secure digital health records management.</p>
+        <ul class="footer-links">
+          <li><a href="#home" (click)="scrollToSection('home')">Home</a></li>
+          <li><a href="#about" (click)="scrollToSection('about')">About</a></li>
+          <li><a href="#services" (click)="scrollToSection('services')">Services</a></li>
+          <li><a href="#blog" (click)="scrollToSection('blog')">Blog</a></li>
+        </ul>
+        <div class="social-icons">
+          <a href="#" class="social-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/>
+              <circle cx="4" cy="4" r="2"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-column newsletter">
+        <h3>Stay Updated</h3>
+        <p>Subscribe to receive updates about new features and health tips.</p>
+        <form class="newsletter-form">
+          <input type="email" placeholder="Your email address" class="newsletter-input">
+          <button type="submit" class="newsletter-button">Subscribe</button>
+        </form>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>Copyright ©2025 Med-Connect. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Scroll to Top Button -->
+<button class="scroll-top" [class.visible]="showScrollTop" (click)="scrollToTop()">
+  ↑
+</button>
