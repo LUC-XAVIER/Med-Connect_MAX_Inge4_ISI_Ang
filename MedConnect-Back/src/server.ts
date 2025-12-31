@@ -1,24 +1,31 @@
 import app from './app';
-import connectMongoDB from '@config/mongoose';
-import pool from '@config/mysql';
+import { connectMongoDB } from '@config/mongodb';
+import { connectMySQL } from '@config/mysql';
 import logger from '@utils/logger';
+import { initializeSocket } from '@utils/socketHandler';
 import dotenv from 'dotenv';
+import http from 'http';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = initializeSocket(server);
+
 const startServer = async (): Promise<void> => {
   try {
     // Connect to MongoDB
     await connectMongoDB();
-    await pool.connectMySQL();
-
-    // MySQL connection is initialized in mysql.ts config file
+    await connectMySQL();
 
     // Start server
-    const server = app.listen(PORT, () => {
+    server.listen(PORT, () => {
       logger.info(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+      logger.info(`📡 WebSocket server is ready for connections`);
       logger.info(`📍 API endpoint: http://localhost:${PORT}/api/${process.env.API_VERSION}`);
     });
 
@@ -46,3 +53,5 @@ const startServer = async (): Promise<void> => {
 };
 
 startServer();
+
+export { io };
