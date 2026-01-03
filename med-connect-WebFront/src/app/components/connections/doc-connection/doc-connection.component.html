@@ -1,0 +1,421 @@
+<div class="dashboard-wrapper">
+  <app-sidebar userRole="doctor"></app-sidebar>
+
+  <main class="connections-container">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-top">
+        <div class="greeting-section">
+          <h1 class="greeting-title">Patient Connections</h1>
+          <p class="greeting-subtitle">Manage your patient connection requests and active connections</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-notification" title="Notifications" [attr.data-count]="unreadCount > 0 ? unreadCount : null">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </button>
+          <div class="user-profile">
+            <div class="profile-avatar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="profile-details">
+              <span class="profile-name">{{ currentUser?.first_name }} {{ currentUser?.last_name }}</span>
+              <span class="profile-role">Doctor</span>
+            </div>
+          </div>
+          <button class="btn-view-all" (click)="refreshConnections()" [disabled]="isLoading">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 6px;">
+              <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2"/>
+              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="main-content-section">
+      <div class="search-section">
+        <div class="search-wrapper">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search patients by name or email..."
+            [(ngModel)]="searchQuery"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-section">
+      <div class="stat-card stat-card-warning">
+        <div class="stat-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Pending Requests</p>
+          <h3 class="stat-value">{{ pendingConnections.length }}</h3>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card-success">
+        <div class="stat-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+            <path d="M22 4 12 14.01l-3-3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Active Connections</p>
+          <h3 class="stat-value">{{ approvedConnections.length }}</h3>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card-info">
+        <div class="stat-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Total Patients</p>
+          <h3 class="stat-value">{{ allConnections.length }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading connections...</p>
+    </div>
+
+    <!-- Tabs Section -->
+    <div *ngIf="!isLoading" class="tabs-section">
+      <mat-tab-group [(selectedIndex)]="selectedTab" class="connections-tabs">
+        <!-- Pending Requests Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <span class="tab-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Pending Requests
+              <span class="tab-badge" *ngIf="pendingConnections.length > 0">{{ pendingConnections.length }}</span>
+            </span>
+          </ng-template>
+
+          <div class="tab-content">
+            <div *ngIf="filteredPendingConnections.length === 0" class="empty-state">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <h3>No Pending Requests</h3>
+              <p>You don't have any pending connection requests at the moment.</p>
+            </div>
+
+            <div *ngIf="filteredPendingConnections.length > 0" class="connections-grid">
+              <div *ngFor="let connection of filteredPendingConnections" class="connection-card pending-card">
+                <div class="card-header">
+                  <div class="patient-avatar">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="patient-info">
+                    <h4 class="patient-name">{{ connection.patient_first_name }} {{ connection.patient_last_name }}</h4>
+                    <p class="patient-email">{{ connection.patient_email }}</p>
+                  </div>
+                  <span class="status-badge status-pending">Pending</span>
+                </div>
+
+                <div class="card-body">
+                  <div class="info-grid">
+                    <div class="info-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>Age: {{ getPatientAge(connection.patient_dob) }} years</span>
+                    </div>
+                    <div class="info-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>{{ connection.patient_gender | titlecase }}</span>
+                    </div>
+                    <div class="info-item" *ngIf="connection.patient_bloodtype">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>Blood Type: {{ connection.patient_bloodtype }}</span>
+                    </div>
+                    <div class="info-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>Requested: {{ connection.request_date | date:'short' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <button class="btn btn-success" (click)="approveConnection(connection)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+                      <path d="M22 4 12 14.01l-3-3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Approve
+                  </button>
+                  <button class="btn btn-danger" (click)="rejectConnection(connection)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                      <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2"/>
+                      <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Reject
+                  </button>
+                  <button class="btn btn-secondary" (click)="openPatientDetails(connection)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                      <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Active Connections Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <span class="tab-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+                <path d="M22 4 12 14.01l-3-3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Active Connections
+              <span class="tab-badge badge-success" *ngIf="approvedConnections.length > 0">{{ approvedConnections.length }}</span>
+            </span>
+          </ng-template>
+
+          <div class="tab-content">
+            <div *ngIf="filteredApprovedConnections.length === 0" class="empty-state">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <h3>No Active Connections</h3>
+              <p>You don't have any active patient connections yet.</p>
+            </div>
+
+            <div *ngIf="filteredApprovedConnections.length > 0" class="connections-grid">
+              <div *ngFor="let connection of filteredApprovedConnections" class="connection-card approved-card">
+                <div class="card-header">
+                  <div class="patient-avatar">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="patient-info">
+                    <h4 class="patient-name">{{ connection.patient_first_name }} {{ connection.patient_last_name }}</h4>
+                    <p class="patient-email">{{ connection.patient_email }}</p>
+                  </div>
+                  <span class="status-badge status-approved">Active</span>
+                </div>
+
+                <div class="card-body">
+                  <div class="info-grid">
+                    <div class="info-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>Age: {{ getPatientAge(connection.patient_dob) }} years</span>
+                    </div>
+                    <div class="info-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>{{ connection.patient_gender | titlecase }}</span>
+                    </div>
+                    <div class="info-item" *ngIf="connection.patient_bloodtype">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>Blood Type: {{ connection.patient_bloodtype }}</span>
+                    </div>
+                    <div class="info-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      <span>Connected: {{ connection.response_date | date:'short' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <button class="btn btn-primary" (click)="viewPatientRecords(connection)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    View Records
+                  </button>
+                  <button class="btn btn-warning" (click)="revokeConnection(connection)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                      <path d="m4.93 4.93 14.14 14.14" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Revoke Access
+                  </button>
+                  <button class="btn btn-secondary" (click)="openPatientDetails(connection)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                      <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- History Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <span class="tab-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              History
+            </span>
+          </ng-template>
+
+          <div class="tab-content">
+            <div *ngIf="filteredRejectedConnections.length === 0" class="empty-state">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <h3>No History</h3>
+              <p>No rejected or revoked connections.</p>
+            </div>
+
+            <div *ngIf="filteredRejectedConnections.length > 0" class="connections-list">
+              <div *ngFor="let connection of filteredRejectedConnections" class="connection-row">
+                <div class="patient-avatar-small">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="connection-details">
+                  <h4>{{ connection.patient_first_name }} {{ connection.patient_last_name }}</h4>
+                  <p>{{ connection.patient_email }}</p>
+                </div>
+                <span class="status-badge" [ngClass]="'status-' + connection.status">
+                  {{ connection.status | titlecase }}
+                </span>
+                <span class="connection-date">{{ connection.response_date | date:'short' }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </main>
+
+  <!-- Patient Details Modal -->
+  <div *ngIf="showPatientDetailsModal" class="modal-overlay" (click)="closePatientDetails()">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Patient Details</h3>
+        <button class="close-btn" (click)="closePatientDetails()">×</button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedConnection">
+        <div class="patient-profile">
+          <div class="profile-avatar-large">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="profile-info">
+            <h2>{{ selectedConnection.patient_first_name }} {{ selectedConnection.patient_last_name }}</h2>
+            <p>{{ selectedConnection.patient_email }}</p>
+            <span class="status-badge" [ngClass]="'status-' + selectedConnection.status">
+              {{ selectedConnection.status | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>Date of Birth</label>
+            <p>{{ selectedConnection.patient_dob | date:'fullDate' }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Age</label>
+            <p>{{ getPatientAge(selectedConnection.patient_dob) }} years</p>
+          </div>
+          <div class="detail-item">
+            <label>Gender</label>
+            <p>{{ selectedConnection.patient_gender | titlecase }}</p>
+          </div>
+          <div class="detail-item" *ngIf="selectedConnection.patient_bloodtype">
+            <label>Blood Type</label>
+            <p>{{ selectedConnection.patient_bloodtype }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Request Date</label>
+            <p>{{ selectedConnection.request_date | date:'full' }}</p>
+          </div>
+          <div class="detail-item" *ngIf="selectedConnection.response_date">
+            <label>Response Date</label>
+            <p>{{ selectedConnection.response_date | date:'full' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closePatientDetails()">Close</button>
+        <button
+          *ngIf="selectedConnection?.status === 'approved'"
+          class="btn btn-primary"
+          (click)="viewPatientRecords(selectedConnection!); closePatientDetails()">
+          View Records
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

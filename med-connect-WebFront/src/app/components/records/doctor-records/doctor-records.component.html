@@ -1,0 +1,247 @@
+<div class="dashboard-wrapper">
+  <app-sidebar userRole="doctor"></app-sidebar>
+
+  <main class="dashboard-content">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-top">
+        <div class="greeting-section">
+          <h1 class="greeting-title">Patient Medical Records</h1>
+          <p class="greeting-subtitle">View shared medical records from your connected patients</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-notification" title="Notifications" [attr.data-count]="unreadCount > 0 ? unreadCount : null">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </button>
+          <div class="user-profile">
+            <div class="profile-avatar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="profile-details">
+              <span class="profile-name">{{ currentUser?.first_name }} {{ currentUser?.last_name }}</span>
+              <span class="profile-role">Doctor</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content-section">
+      <!-- Patient Selection (if no patient selected) -->
+      <div *ngIf="!selectedPatient && !isLoading" class="glass-card">
+        <div *ngIf="connectedPatients.length === 0" class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <h3>No Connected Patients</h3>
+          <p>You don't have any approved patient connections yet. Patients need to connect with you and share their records.</p>
+        </div>
+
+        <!-- Connected Patients List -->
+        <div *ngIf="connectedPatients.length > 0" class="patients-list">
+          <h3 class="section-title">Select a Patient to View Records</h3>
+          <div class="patients-grid">
+            <div *ngFor="let patient of connectedPatients" 
+                 class="patient-card"
+                 (click)="viewPatientRecords(patient)">
+              <div class="patient-avatar">
+                {{ patient.patient_first_name.charAt(0) }}
+              </div>
+              <div class="patient-info">
+                <h4>{{ getPatientDisplayName(patient) }}</h4>
+                <p>{{ patient.patient_email }}</p>
+                <div class="patient-meta">
+                  <span>{{ patient.patient_gender | titlecase }}</span>
+                  <span *ngIf="patient.patient_bloodtype"> • {{ patient.patient_bloodtype }}</span>
+                </div>
+              </div>
+              <button class="btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M14 2v6h6M16 13H8m8 4H8m2-8H8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                View Records
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Records View (when patient selected) - Separate Card -->
+      <div *ngIf="selectedPatient" class="glass-card">
+        <!-- Patient Info Header -->
+        <div class="patient-header">
+          <button class="btn-back" (click)="selectedPatient = null; patientRecords = []; filteredRecords = []">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Back to Patients
+          </button>
+          <div class="patient-header-info">
+            <div class="patient-avatar-large">
+              {{ selectedPatient.patient_first_name.charAt(0) }}
+            </div>
+            <div>
+              <h2>{{ getPatientDisplayName(selectedPatient) }}</h2>
+              <p>{{ selectedPatient.patient_email }}</p>
+              <div class="patient-details" *ngIf="patientInfo">
+                <span>{{ patientInfo.gender | titlecase }}</span>
+                <span *ngIf="patientInfo.bloodtype"> • Blood Type: {{ patientInfo.bloodtype }}</span>
+                <span *ngIf="patientInfo.dob"> • DOB: {{ formatDate(patientInfo.dob) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="share-indicator" *ngIf="shareAll">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span>All Records Shared</span>
+          </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+          <div class="search-bar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search records..."
+              [(ngModel)]="searchQuery"
+              (input)="applyFilters()" />
+          </div>
+
+          <div class="filters-row">
+            <select class="filter-select" [(ngModel)]="selectedType" (change)="applyFilters()">
+              <option *ngFor="let type of recordTypes" [value]="type.value">{{ type.label }}</option>
+            </select>
+
+            <input
+              type="date"
+              class="filter-date"
+              [(ngModel)]="startDate"
+              (change)="applyFilters()"
+              placeholder="Start Date" />
+
+            <input
+              type="date"
+              class="filter-date"
+              [(ngModel)]="endDate"
+              (change)="applyFilters()"
+              placeholder="End Date" />
+
+            <button class="btn-secondary" (click)="clearFilters()">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoadingRecords" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading patient records...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoadingRecords && filteredRecords.length === 0" class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+            <path d="M14 2v6h6M16 13H8m8 4H8m2-8H8" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <h3>No Records Found</h3>
+          <p *ngIf="patientRecords.length === 0">This patient hasn't shared any medical records with you yet.</p>
+          <p *ngIf="patientRecords.length > 0">No records match your current filters.</p>
+        </div>
+
+        <!-- Records Grid -->
+        <div *ngIf="!isLoadingRecords && filteredRecords.length > 0" class="records-grid">
+          <div *ngFor="let record of filteredRecords"
+               class="record-card"
+               (click)="openRecordModal(record)">
+            <div class="record-icon-wrapper">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                <path d="M14 2v6h6M16 13H8m8 4H8m2-8H8" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="record-info">
+              <h4>{{ record.title }}</h4>
+              <p class="record-type">{{ record.record_type | titlecase }}</p>
+              <p class="record-date">{{ formatDate(record.record_date) }}</p>
+            </div>
+            <div class="record-actions">
+              <button class="btn-icon" (click)="downloadRecord(record); $event.stopPropagation()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/>
+                  <path d="M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State (Initial) -->
+      <div *ngIf="isLoading && !selectedPatient" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading connected patients...</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Record Detail Modal -->
+<div *ngIf="showRecordModal && selectedRecord" class="modal-overlay" (click)="closeRecordModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedRecord.title }}</h3>
+      <button class="close-btn" (click)="closeRecordModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="record-details">
+        <div class="detail-row">
+          <span class="detail-label">Type:</span>
+          <span class="detail-value">{{ selectedRecord.record_type | titlecase }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Date:</span>
+          <span class="detail-value">{{ formatDate(selectedRecord.record_date) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedRecord.description">
+          <span class="detail-label">Description:</span>
+          <span class="detail-value">{{ selectedRecord.description }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">File:</span>
+          <span class="detail-value">{{ selectedRecord.file_name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Uploaded:</span>
+          <span class="detail-value">{{ formatDate(selectedRecord.uploaded_at) }}</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeRecordModal()">Close</button>
+        <button class="btn-primary" (click)="downloadRecord(selectedRecord)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/>
+            <path d="M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          Download File
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

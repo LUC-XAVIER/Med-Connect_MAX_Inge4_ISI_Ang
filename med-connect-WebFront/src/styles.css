@@ -1,3 +1,8 @@
+/* Angular Material Theme Import */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import './app/components/records/patient-records/patient-records.component.css';
+@import './app/components/records/doctor-records/doctor-records.component.css';
+/* Add other component CSS files here */
 /* Global Styles */
 * {
   margin: 0;
@@ -14,7 +19,29 @@
   --light-text: #7f8c8d;
   --white: #ffffff;
   --light-bg: #f8f9fa;
-}
+    --primary-teal: #14b8a6;
+    --primary-teal-dark: #0d9488;
+    --primary-teal-light: #5eead4;
+    --secondary-orange: #FF8B4D;
+    --secondary-orange-dark: #FF7326;
+    --secondary-orange-light: #FFB088;
+    --accent-blue: #2563EB;
+    --accent-blue-dark: #1d4ed8;
+    --success-green: #10b981;
+    --warning-amber: #f59e0b;
+    --danger-red: #ef4444;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+    --neutral-900: #111827;
+  }
+
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
