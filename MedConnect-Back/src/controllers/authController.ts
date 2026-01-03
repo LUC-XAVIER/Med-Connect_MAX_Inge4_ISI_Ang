@@ -7,6 +7,10 @@ export class AuthController {
   // Register new patient
   async registerPatient(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log('=== Patient Registration Request ===');
+      console.log('Request body:', req.body);
+      console.log('Request headers:', req.headers);
+      
       const patientData: IRegisterPatient = req.body;
 
       const result = await authService.registerPatient(patientData);
@@ -24,6 +28,10 @@ export class AuthController {
   // Register new doctor
   async registerDoctor(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log('=== Doctor Registration Request ===');
+      console.log('Request body:', req.body);
+      console.log('Request headers:', req.headers);
+      
       const doctorData: IRegisterDoctor = req.body;
 
       const result = await authService.registerDoctor(doctorData);
@@ -41,16 +49,23 @@ export class AuthController {
   // Login user
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log('=== Login Request ===');
+      console.log('Email:', req.body.email);
+      console.log('Password provided:', req.body.password ? 'Yes' : 'No');
+      
       const credentials: ILoginCredentials = req.body;
 
       const result = await authService.login(credentials);
 
+      console.log('Login successful for:', credentials.email);
+      
       res.status(HTTP_STATUS.OK).json({
         success: true,
         message: 'Login successful',
         data: result,
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error in controller:', error.message || error);
       next(error);
     }
   }

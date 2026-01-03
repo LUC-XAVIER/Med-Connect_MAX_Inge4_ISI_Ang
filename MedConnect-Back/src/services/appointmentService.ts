@@ -8,44 +8,98 @@ import { HTTP_STATUS } from '../utils/constants';
 import logger from '../utils/logger';
 
 export class AppointmentService {
-  // Create appointment (patient books with doctor)
-  async createAppointment(patientUserId: number, appointmentData: ICreateAppointment): Promise<any> {
+  // Create appointment - PATIENT books with doctor
+  async createAppointmentByPatient(patientUserId: number, appointmentData: any): Promise<any> {
     // Get patient
     const patient = await patientRepository.findByUserId(patientUserId);
     if (!patient) {
       throw new AppError('Patient profile not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Verify doctor exists
-    const doctor = await doctorRepository.findById(appointmentData.doctor_id);
+    // Verify doctor exists using doctor_user_id from frontend
+    const doctor = await doctorRepository.findByUserId(appointmentData.doctor_user_id);
     if (!doctor) {
       throw new AppError('Doctor not found', HTTP_STATUS.NOT_FOUND);
     }
 
     // Check if connection exists and is approved
-    const isConnected = await connectionRepository.isApproved(patient.patient_id, appointmentData.doctor_id);
+    const isConnected = await connectionRepository.isApproved(patient.patient_id, doctor.doctor_id);
     if (!isConnected) {
       throw new AppError('You can only book appointments with connected doctors', HTTP_STATUS.FORBIDDEN);
     }
 
     // Check if slot is available
     const isAvailable = await appointmentRepository.isSlotAvailable(
-      appointmentData.doctor_id,
-      appointmentData.appointment_date,
-      appointmentData.appointment_time
+        doctor.doctor_id,
+        new Date(appointmentData.appointment_date),
+        appointmentData.appointment_time
     );
 
     if (!isAvailable) {
       throw new AppError('This time slot is not available', HTTP_STATUS.CONFLICT);
     }
 
-    // Set patient_id
-    appointmentData.patient_id = patient.patient_id;
+    // Create appointment with database IDs
+    const appointmentToCreate: ICreateAppointment = {
+      patient_id: patient.patient_id,
+      doctor_id: doctor.doctor_id,
+      appointment_date: new Date(appointmentData.appointment_date),
+      appointment_time: appointmentData.appointment_time,
+      duration: appointmentData.duration || 30,
+      reason: appointmentData.reason,
+    };
 
-    // Create appointment
-    const appointment = await appointmentRepository.create(appointmentData);
+    const appointment = await appointmentRepository.create(appointmentToCreate);
 
-    logger.info(`Appointment created: appointment_id=${appointment.appointment_id}`);
+    logger.info(`Appointment created by patient: appointment_id=${appointment.appointment_id}`);
+
+    return await appointmentRepository.findById(appointment.appointment_id);
+  }
+
+  // Create appointment - DOCTOR schedules for patient
+  async createAppointmentByDoctor(doctorUserId: number, appointmentData: any): Promise<any> {
+    // Get doctor
+    const doctor = await doctorRepository.findByUserId(doctorUserId);
+    if (!doctor) {
+      throw new AppError('Doctor profile not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Verify patient exists using patient_user_id from frontend
+    const patient = await patientRepository.findByUserId(appointmentData.patient_user_id);
+    if (!patient) {
+      throw new AppError('Patient not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Check if connection exists and is approved
+    const isConnected = await connectionRepository.isApproved(patient.patient_id, doctor.doctor_id);
+    if (!isConnected) {
+      throw new AppError('You can only schedule appointments with connected patients', HTTP_STATUS.FORBIDDEN);
+    }
+
+    // Check if slot is available
+    const isAvailable = await appointmentRepository.isSlotAvailable(
+        doctor.doctor_id,
+        new Date(appointmentData.appointment_date),
+        appointmentData.appointment_time
+    );
+
+    if (!isAvailable) {
+      throw new AppError('This time slot is not available', HTTP_STATUS.CONFLICT);
+    }
+
+    // Create appointment with database IDs
+    const appointmentToCreate: ICreateAppointment = {
+      patient_id: patient.patient_id,
+      doctor_id: doctor.doctor_id,
+      appointment_date: new Date(appointmentData.appointment_date),
+      appointment_time: appointmentData.appointment_time,
+      duration: appointmentData.duration || 30,
+      reason: appointmentData.reason,
+    };
+
+    const appointment = await appointmentRepository.create(appointmentToCreate);
+
+    logger.info(`Appointment created by doctor: appointment_id=${appointment.appointment_id}`);
 
     return await appointmentRepository.findById(appointment.appointment_id);
   }
@@ -122,16 +176,21 @@ export class AppointmentService {
 
   // Reschedule appointment
   async rescheduleAppointment(
-    appointmentId: number,
-    newDate: Date,
-    newTime: string,
-    userId: number,
-    userRole: string
+      appointmentId: number,
+      newDate: Date,
+      newTime: string,
+      userId: number,
+      userRole: string
   ): Promise<any> {
     const appointment = await appointmentRepository.findById(appointmentId);
 
     if (!appointment) {
       throw new AppError('Appointment not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Cannot reschedule completed or cancelled appointments
+    if (appointment.status === 'completed' || appointment.status === 'cancelled') {
+      throw new AppError('Cannot reschedule a completed or cancelled appointment', HTTP_STATUS.BAD_REQUEST);
     }
 
     // Verify user is part of the appointment
@@ -140,30 +199,36 @@ export class AppointmentService {
       if (!patient || patient.patient_id !== appointment.patient_id) {
         throw new AppError('Unauthorized', HTTP_STATUS.FORBIDDEN);
       }
+      
+      // Patient can only reschedule if appointment is not confirmed by doctor
+      if (appointment.status === 'confirmed') {
+        throw new AppError('Cannot reschedule: This appointment has been confirmed by the doctor. Please contact the doctor to reschedule.', HTTP_STATUS.FORBIDDEN);
+      }
     } else if (userRole === 'doctor') {
       const doctor = await doctorRepository.findByUserId(userId);
       if (!doctor || doctor.doctor_id !== appointment.doctor_id) {
         throw new AppError('Unauthorized', HTTP_STATUS.FORBIDDEN);
       }
+      // Doctor can always reschedule (they created it or confirmed it)
     }
 
     // Check if new slot is available
     const isAvailable = await appointmentRepository.isSlotAvailable(
-      appointment.doctor_id,
-      newDate,
-      newTime,
-      appointmentId
+        appointment.doctor_id,
+        newDate,
+        newTime,
+        appointmentId
     );
 
     if (!isAvailable) {
       throw new AppError('This time slot is not available', HTTP_STATUS.CONFLICT);
     }
 
-    // Update appointment
+    // Update appointment - reset to scheduled if it was confirmed
     await appointmentRepository.update(appointmentId, {
       appointment_date: newDate,
       appointment_time: newTime,
-      status: 'scheduled',
+      status: appointment.status === 'confirmed' ? 'scheduled' : appointment.status,
     });
 
     logger.info(`Appointment rescheduled: appointment_id=${appointmentId}`);

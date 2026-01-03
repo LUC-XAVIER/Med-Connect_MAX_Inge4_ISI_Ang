@@ -9,30 +9,59 @@ import logger from '../utils/logger';
 
 export class PrescriptionService {
   // Create prescription (doctor only)
-  async createPrescription(doctorUserId: number, prescriptionData: ICreatePrescription): Promise<any> {
+  async createPrescription(doctorUserId: number, prescriptionData: any): Promise<any> {
     // Get doctor
     const doctor = await doctorRepository.findByUserId(doctorUserId);
     if (!doctor) {
       throw new AppError('Doctor profile not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Verify patient exists
-    const patient = await patientRepository.findById(prescriptionData.patient_id);
+    // Get patient - handle both patient_id and patient_user_id
+    // Note: Frontend sends patient_user_id, but if it's actually a patient_id, handle it
+    let patient;
+    if (prescriptionData.patient_user_id && prescriptionData.patient_user_id > 0) {
+      // Try to find by user_id first
+      patient = await patientRepository.findByUserId(prescriptionData.patient_user_id);
+      // If not found, it might actually be a patient_id (legacy data)
+      if (!patient) {
+        patient = await patientRepository.findById(prescriptionData.patient_user_id);
+      }
+    } else if (prescriptionData.patient_id && prescriptionData.patient_id > 0) {
+      patient = await patientRepository.findById(prescriptionData.patient_id);
+    } else {
+      throw new AppError('Patient ID or user ID is required', HTTP_STATUS.BAD_REQUEST);
+    }
+
     if (!patient) {
       throw new AppError('Patient not found', HTTP_STATUS.NOT_FOUND);
     }
 
     // Check if connection exists and is approved
-    const isConnected = await connectionRepository.isApproved(prescriptionData.patient_id, doctor.doctor_id);
+    const isConnected = await connectionRepository.isApproved(patient.patient_id, doctor.doctor_id);
     if (!isConnected) {
       throw new AppError('You can only prescribe to connected patients', HTTP_STATUS.FORBIDDEN);
     }
 
-    // Set doctor_id
-    prescriptionData.doctor_id = doctor.doctor_id;
+    // Create prescription data with database IDs
+    // Handle both single medication (from frontend) and medications array
+    const medications = prescriptionData.medications || [{
+      medication_name: prescriptionData.medication_name,
+      dosage: prescriptionData.dosage,
+      frequency: prescriptionData.frequency,
+      duration: prescriptionData.duration,
+      instructions: prescriptionData.instructions,
+    }];
+
+    const prescriptionToCreate: ICreatePrescription = {
+      patient_id: patient.patient_id,
+      doctor_id: doctor.doctor_id,
+      diagnosis: prescriptionData.diagnosis || prescriptionData.reason || 'General prescription',
+      notes: prescriptionData.notes,
+      medications: medications,
+    };
 
     // Create prescription
-    const prescription = await prescriptionRepository.create(prescriptionData);
+    const prescription = await prescriptionRepository.create(prescriptionToCreate);
 
     logger.info(`Prescription created: prescription_id=${prescription.prescription_id}`);
 

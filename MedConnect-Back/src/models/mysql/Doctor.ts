@@ -1,6 +1,6 @@
 export interface IDoctor {
-  doctor_id: number;
-  user_id: number;
+  doctor_id: int;
+  user_id: int;
   specialty: string;
   license_number: string;
   hospital_affiliation?: string;

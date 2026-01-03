@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import appointmentController from '../controllers/appointmentController';
-import { authenticate, isPatient } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import {
   createAppointmentValidation,
   updateAppointmentStatusValidation,
@@ -10,53 +10,52 @@ import {
 
 const router = Router();
 
-// Create appointment (patient only)
+// Create appointment (BOTH patient and doctor can create)
 router.post(
-  '/',
-  authenticate,
-  isPatient,
-  createAppointmentValidation,
-  validate,
-  appointmentController.createAppointment
+    '/',
+    authenticate,
+    createAppointmentValidation,
+    validate,
+    appointmentController.createAppointment
 );
 
 // Get my appointments
 router.get(
-  '/',
-  authenticate,
-  appointmentController.getMyAppointments
+    '/',
+    authenticate,
+    appointmentController.getMyAppointments
 );
 
 // Get single appointment
 router.get(
-  '/:appointmentId',
-  authenticate,
-  appointmentController.getAppointmentById
+    '/:appointmentId',
+    authenticate,
+    appointmentController.getAppointmentById
 );
 
 // Update appointment status
 router.put(
-  '/:appointmentId/status',
-  authenticate,
-  updateAppointmentStatusValidation,
-  validate,
-  appointmentController.updateStatus
+    '/:appointmentId/status',
+    authenticate,
+    updateAppointmentStatusValidation,
+    validate,
+    appointmentController.updateStatus
 );
 
 // Reschedule appointment
 router.put(
-  '/:appointmentId/reschedule',
-  authenticate,
-  rescheduleAppointmentValidation,
-  validate,
-  appointmentController.rescheduleAppointment
+    '/:appointmentId/reschedule',
+    authenticate,
+    rescheduleAppointmentValidation,
+    validate,
+    appointmentController.rescheduleAppointment
 );
 
 // Cancel appointment
 router.delete(
-  '/:appointmentId',
-  authenticate,
-  appointmentController.cancelAppointment
+    '/:appointmentId',
+    authenticate,
+    appointmentController.cancelAppointment
 );
 
 export default router;

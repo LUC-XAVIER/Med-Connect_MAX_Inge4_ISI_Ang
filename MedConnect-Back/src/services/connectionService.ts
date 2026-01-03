@@ -2,34 +2,34 @@ import connectionRepository from '../repositories/connectionRepository';
 import patientRepository from '../repositories/patientRepository';
 import doctorRepository from '../repositories/doctorRepository';
 import recordRepository from '../repositories/recordRepository';
-import { AppError } from '../middleware/errorHandler';
-import { HTTP_STATUS } from '../utils/constants';
+import { AppError } from '@middleware/errorHandler';
+import { HTTP_STATUS } from '@utils/constants';
 import logger from '../utils/logger';
 
 export class ConnectionService {
   // Patient sends connection request to doctor
   async requestConnection(doctorUserId: number, patientUserId: number): Promise<any> {
+    // Get patient profile - verify requester is a valid patient
+    const patient = await patientRepository.findByUserId(patientUserId);
+    if (!patient) {
+      throw new AppError('Patient profile not found', HTTP_STATUS.NOT_FOUND);
+    }
+
     // Get doctor profile
     const doctor = await doctorRepository.findByUserId(doctorUserId);
     if (!doctor) {
       throw new AppError('Doctor profile not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Check if doctor is verified
+    // Check if doctor is verified (doctors must be verified to receive requests)
     if (!doctor.verified) {
-      throw new AppError('Only verified doctors can send connection requests', HTTP_STATUS.FORBIDDEN);
-    }
-
-    // Get patient profile
-    const patient = await patientRepository.findByUserId(patientUserId);
-    if (!patient) {
-      throw new AppError('Patient not found', HTTP_STATUS.NOT_FOUND);
+      throw new AppError('This doctor is not yet verified and cannot accept connection requests', HTTP_STATUS.FORBIDDEN);
     }
 
     // Check if connection already exists
     const existingConnection = await connectionRepository.findByPatientAndDoctor(
-      patient.patient_id,
-      doctor.doctor_id
+        patient.patient_id,
+        doctor.doctor_id
     );
 
     if (existingConnection) {
@@ -58,7 +58,6 @@ export class ConnectionService {
 
     return connection;
   }
-
   // Doctor approves connection request
   async approveConnection(connectionId: number, doctorUserId: number): Promise<any> {
     const connection = await connectionRepository.findById(connectionId);
@@ -154,9 +153,9 @@ export class ConnectionService {
 
   // Share specific records with doctor
   async shareRecords(
-    connectionId: number,
-    recordIds: string[],
-    patientUserId: number
+      connectionId: number,
+      recordIds: string[],
+      patientUserId: number
   ): Promise<void> {
     const connection = await connectionRepository.findById(connectionId);
 
@@ -192,9 +191,9 @@ export class ConnectionService {
 
   // Unshare specific records from doctor
   async unshareRecords(
-    connectionId: number,
-    recordIds: string[],
-    patientUserId: number
+      connectionId: number,
+      recordIds: string[],
+      patientUserId: number
   ): Promise<void> {
     const connection = await connectionRepository.findById(connectionId);
 
@@ -302,8 +301,8 @@ export class ConnectionService {
 
     // Check if approved connection exists
     const connection = await connectionRepository.findByPatientAndDoctor(
-      patient.patient_id,
-      doctor.doctor_id
+        patient.patient_id,
+        doctor.doctor_id
     );
 
     if (!connection || connection.status !== 'approved') {

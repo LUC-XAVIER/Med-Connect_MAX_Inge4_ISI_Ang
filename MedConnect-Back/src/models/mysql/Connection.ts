@@ -16,6 +16,7 @@ export interface ICreateConnection {
 
 export interface IConnectionWithDetails extends IConnection {
   // Patient details
+  patient_user_id?: number; // Added for doctor connections
   patient_first_name: string;
   patient_last_name: string;
   patient_email: string;
@@ -24,6 +25,7 @@ export interface IConnectionWithDetails extends IConnection {
   patient_bloodtype?: string;
   
   // Doctor details
+  doctor_user_id?: number; // Added for patient connections
   doctor_first_name: string;
   doctor_last_name: string;
   doctor_email: string;

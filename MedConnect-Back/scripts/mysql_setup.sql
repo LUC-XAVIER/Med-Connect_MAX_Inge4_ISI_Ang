@@ -3,8 +3,8 @@
 -- Med-Connect Database Schema
 -- ============================================
 
-CREATE DATABASE IF NOT EXISTS medconnect_db;
-USE medconnect_db;
+CREATE DATABASE IF NOT EXISTS medconnect;
+USE medconnect;
 
 -- 1. Users table (UPDATED - added profile_picture)
 CREATE TABLE users (

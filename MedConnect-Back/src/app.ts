@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import dotenv from 'dotenv';
 
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler } from '@middleware/errorHandler';
 // import logger from './utils/logger';
 
 // Import routes
@@ -50,14 +50,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'),
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use('/api', limiter);
-
 // Health check route
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
@@ -69,6 +61,40 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // API routes
 const API_VERSION = process.env.API_VERSION || 'v1';
+
+// API info route (must be before rate limiter to avoid issues)
+app.get([`/api/${API_VERSION}`, `/api/${API_VERSION}/`], (_req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'Med-Connect API',
+    version: API_VERSION,
+    endpoints: {
+      auth: `/api/${API_VERSION}/auth`,
+      patients: `/api/${API_VERSION}/patients`,
+      doctors: `/api/${API_VERSION}/doctors`,
+      records: `/api/${API_VERSION}/records`,
+      appointments: `/api/${API_VERSION}/appointments`,
+      prescriptions: `/api/${API_VERSION}/prescriptions`,
+      connections: `/api/${API_VERSION}/connections`,
+      messages: `/api/${API_VERSION}/messages`,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Rate limiting (applied after the info route)
+// More lenient limits for development, stricter for production
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+  max: process.env.NODE_ENV === 'production' 
+    ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100')
+    : parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '300'), // 300 requests per 15 min in dev
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', limiter);
+
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/patients`, patientRoutes);
 app.use(`/api/${API_VERSION}/doctors`, doctorRoutes);

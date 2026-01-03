@@ -48,11 +48,12 @@ export class ConnectionRepository {
     return rows[0] as IConnection;
   }
 
-  // Get all connections for a patient (with doctor details)
+// Get all connections for a patient (with doctor details)
   async getPatientConnections(patientId: number, status?: string): Promise<IConnectionWithDetails[]> {
     let query = `
-      SELECT 
+      SELECT
         c.*,
+        d.user_id as doctor_user_id,
         u_d.first_name as doctor_first_name,
         u_d.last_name as doctor_last_name,
         u_d.email as doctor_email,
@@ -60,8 +61,8 @@ export class ConnectionRepository {
         d.hospital_affiliation as doctor_hospital,
         d.verified as doctor_verified
       FROM connections c
-      JOIN doctors d ON c.doctor_id = d.doctor_id
-      JOIN users u_d ON d.user_id = u_d.user_id
+             JOIN doctors d ON c.doctor_id = d.doctor_id
+             JOIN users u_d ON d.user_id = u_d.user_id
       WHERE c.patient_id = ?
     `;
 
@@ -78,12 +79,12 @@ export class ConnectionRepository {
 
     return rows as IConnectionWithDetails[];
   }
-
   // Get all connections for a doctor (with patient details)
   async getDoctorConnections(doctorId: number, status?: string): Promise<IConnectionWithDetails[]> {
     let query = `
       SELECT 
         c.*,
+        p.user_id as patient_user_id,
         u_p.first_name as patient_first_name,
         u_p.last_name as patient_last_name,
         u_p.email as patient_email,
