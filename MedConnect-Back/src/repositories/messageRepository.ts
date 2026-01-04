@@ -30,6 +30,10 @@ export class MessageRepository {
 
   // Get conversation between two users
   async getConversation(userId1: number, userId2: number, limit: number = 50, offset: number = 0): Promise<MessageWithUserInfo[]> {
+    // Ensure limit and offset are integers
+    const limitInt = Math.max(1, Math.floor(Number(limit)) || 50);
+    const offsetInt = Math.max(0, Math.floor(Number(offset)) || 0);
+    
     const query = `
       SELECT 
         m.*,
@@ -44,13 +48,13 @@ export class MessageRepository {
       INNER JOIN users r ON m.receiver_id = r.user_id
       WHERE (m.sender_id = ? AND m.receiver_id = ?)
          OR (m.sender_id = ? AND m.receiver_id = ?)
-      ORDER BY m.created_at DESC
-      LIMIT ? OFFSET ?
+      ORDER BY m.created_at ASC
+      LIMIT ${limitInt} OFFSET ${offsetInt}
     `;
     
     const [rows] = await pool.execute<RowDataPacket[]>(
       query,
-      [userId1, userId2, userId2, userId1, limit, offset]
+      [userId1, userId2, userId2, userId1]
     );
     
     return rows as MessageWithUserInfo[];
@@ -88,10 +92,12 @@ export class MessageRepository {
         CASE WHEN m.sender_id = ? THEN TRUE ELSE FALSE END as is_last_message_from_me,
         (
           SELECT COUNT(*) 
-          FROM messages 
-          WHERE sender_id = conversation_partner_id 
-            AND receiver_id = ? 
-            AND is_read = FALSE
+          FROM messages msg
+          WHERE (
+            (msg.sender_id = CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END 
+             AND msg.receiver_id = ?)
+          )
+          AND msg.is_read = FALSE
         ) as unread_count
       FROM messages m
       INNER JOIN users s ON m.sender_id = s.user_id
@@ -111,7 +117,7 @@ export class MessageRepository {
     
     const [rows] = await pool.execute<RowDataPacket[]>(
       query,
-      [userId, userId, userId, userId, userId, userId, userId, userId]
+      [userId, userId, userId, userId, userId, userId, userId, userId, userId]
     );
     
     return rows as ConversationPreview[];
@@ -134,13 +140,12 @@ export class MessageRepository {
     const query = `
       SELECT COUNT(*) as count
       FROM connections c
-      INNER JOIN patients p1 ON c.patient_id = p1.patient_id
+      INNER JOIN patients p ON c.patient_id = p.patient_id
       INNER JOIN doctors d ON c.doctor_id = d.doctor_id
-      INNER JOIN patients p2 ON p2.patient_id = c.patient_id
       WHERE c.status = 'approved'
         AND (
-          (p1.user_id = ? AND d.user_id = ?) OR
-          (p1.user_id = ? AND d.user_id = ?)
+          (p.user_id = ? AND d.user_id = ?) OR
+          (p.user_id = ? AND d.user_id = ?)
         )
     `;
     
@@ -149,13 +154,70 @@ export class MessageRepository {
       [userId1, userId2, userId2, userId1]
     );
     
-    return rows[0].count > 0;
+    return (rows[0] as any).count > 0;
   }
 
   // Delete a message (optional - for future use)
   async deleteMessage(messageId: number): Promise<void> {
     const query = `DELETE FROM messages WHERE message_id = ?`;
     await pool.execute(query, [messageId]);
+  }
+
+  // Get all connected users for a user (for showing in conversation list)
+  async getConnectedUsers(userId: number): Promise<Array<{ user_id: number; name: string; profile_picture: string | null }>> {
+    // Get user role first
+    const [userRows] = await pool.execute<RowDataPacket[]>(
+      'SELECT role FROM users WHERE user_id = ?',
+      [userId]
+    );
+    
+    if (userRows.length === 0) {
+      return [];
+    }
+    
+    const userRole = (userRows[0] as any).role;
+    
+    if (userRole === 'patient') {
+      // Get connected doctors
+      const query = `
+        SELECT 
+          d.user_id,
+          CONCAT(u.first_name, ' ', u.last_name) as name,
+          u.profile_picture
+        FROM connections c
+        INNER JOIN patients p ON c.patient_id = p.patient_id
+        INNER JOIN doctors d ON c.doctor_id = d.doctor_id
+        INNER JOIN users u ON d.user_id = u.user_id
+        WHERE p.user_id = ? AND c.status = 'approved'
+      `;
+      const [rows] = await pool.execute<RowDataPacket[]>(query, [userId]);
+      return rows.map((row: any) => ({
+        user_id: row.user_id,
+        name: row.name,
+        profile_picture: row.profile_picture
+      }));
+    } else if (userRole === 'doctor') {
+      // Get connected patients
+      const query = `
+        SELECT 
+          p.user_id,
+          CONCAT(u.first_name, ' ', u.last_name) as name,
+          u.profile_picture
+        FROM connections c
+        INNER JOIN patients p ON c.patient_id = p.patient_id
+        INNER JOIN doctors d ON c.doctor_id = d.doctor_id
+        INNER JOIN users u ON p.user_id = u.user_id
+        WHERE d.user_id = ? AND c.status = 'approved'
+      `;
+      const [rows] = await pool.execute<RowDataPacket[]>(query, [userId]);
+      return rows.map((row: any) => ({
+        user_id: row.user_id,
+        name: row.name,
+        profile_picture: row.profile_picture
+      }));
+    }
+    
+    return [];
   }
 }
 

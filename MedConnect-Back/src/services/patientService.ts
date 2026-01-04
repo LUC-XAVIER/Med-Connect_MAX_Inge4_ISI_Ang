@@ -39,8 +39,10 @@ export class PatientService {
       address?: string;
       // Patient fields
       dob?: Date;
+      date_of_birth?: Date;
       gender?: 'male' | 'female' | 'other';
       bloodtype?: string;
+      blood_type?: string;
     }
   ): Promise<any> {
     // Get patient
@@ -58,9 +60,15 @@ export class PatientService {
     if (updates.contact) userUpdates.contact = updates.contact;
     if (updates.address) userUpdates.address = updates.address;
 
-    if (updates.dob) patientUpdates.dob = updates.dob;
+    // Handle both old and new field names for date of birth
+    const dob = updates.date_of_birth || updates.dob;
+    if (dob) patientUpdates.dob = dob;
+    
     if (updates.gender) patientUpdates.gender = updates.gender;
-    if (updates.bloodtype) patientUpdates.bloodtype = updates.bloodtype;
+    
+    // Handle both old and new field names for blood type
+    const bloodType = updates.blood_type || updates.bloodtype;
+    if (bloodType) patientUpdates.bloodtype = bloodType;
 
     // Update user info if there are user updates
     if (Object.keys(userUpdates).length > 0) {

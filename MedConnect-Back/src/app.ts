@@ -42,8 +42,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from public folder
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static files from uploads directory with permissive resource policy for cross-origin frontends
+app.use('/uploads', (_req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '../uploads')));
 
 // Logging middleware
 if (process.env.NODE_ENV === 'development') {

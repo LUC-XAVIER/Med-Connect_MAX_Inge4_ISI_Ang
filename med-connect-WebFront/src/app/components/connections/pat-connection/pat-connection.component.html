@@ -170,28 +170,11 @@
                 All
               </button>
               <button
+                *ngFor="let spec of getAvailableSpecializations()"
                 class="filter-chip"
-                [class.active]="selectedSpecialization === 'Cardiology'"
-                (click)="filterBySpecialization('Cardiology')">
-                Cardiology
-              </button>
-              <button
-                class="filter-chip"
-                [class.active]="selectedSpecialization === 'Pediatrics'"
-                (click)="filterBySpecialization('Pediatrics')">
-                Pediatrics
-              </button>
-              <button
-                class="filter-chip"
-                [class.active]="selectedSpecialization === 'Neurology'"
-                (click)="filterBySpecialization('Neurology')">
-                Neurology
-              </button>
-              <button
-                class="filter-chip"
-                [class.active]="selectedSpecialization === 'Orthopedics'"
-                (click)="filterBySpecialization('Orthopedics')">
-                Orthopedics
+                [class.active]="selectedSpecialization === spec"
+                (click)="filterBySpecialization(spec)">
+                {{ spec }}
               </button>
             </div>
 
@@ -211,7 +194,13 @@
               <div *ngFor="let doctor of filteredDoctors" class="doctor-card-large">
                 <div class="doctor-card-header-large">
                   <div class="doctor-avatar-large" [style.background]="getAvatarColor(doctor.user_id)">
-                    {{ getInitials(doctor.first_name, doctor.last_name) }}
+                    <img *ngIf="doctor.profile_picture_url" 
+                      [src]="getProfilePictureUrl(doctor.profile_picture_url)" 
+                      [alt]="doctor.first_name + ' ' + doctor.last_name"
+                      onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                    <span *ngIf="!doctor.profile_picture_url">
+                      {{ getInitials(doctor.first_name, doctor.last_name) }}
+                    </span>
                   </div>
                   <div class="doctor-verified-badge" *ngIf="doctor.verified">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -311,7 +300,13 @@
               <div *ngFor="let connection of myConnections" class="connection-full-card">
                 <div class="connection-card-left">
                   <div class="connection-avatar" [style.background]="getAvatarColor(connection.doctor_user_id)">
-                    {{ getInitials(connection.doctor_first_name, connection.doctor_last_name) }}
+                    <img *ngIf="connection.doctor_profile_picture" 
+                         [src]="getProfilePictureUrl(connection.doctor_profile_picture)" 
+                         [alt]="connection.doctor_first_name + ' ' + connection.doctor_last_name"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span *ngIf="!connection.doctor_profile_picture">
+                      {{ getInitials(connection.doctor_first_name, connection.doctor_last_name) }}
+                    </span>
                   </div>
                   <div class="connection-info">
                     <h4>Dr. {{ connection.doctor_first_name }} {{ connection.doctor_last_name }}</h4>
@@ -337,7 +332,8 @@
                     <button
                       *ngIf="connection.status === 'approved'"
                       class="btn-action-small btn-message"
-                      title="Send Message">
+                      title="Send Message"
+                      (click)="navigateToMessages(connection.doctor_user_id)">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
                       </svg>
@@ -345,7 +341,8 @@
                     <button
                       *ngIf="connection.status === 'approved'"
                       class="btn-action-small btn-appointment"
-                      title="Book Appointment">
+                      title="Book Appointment"
+                      (click)="navigateToAppointments(connection.doctor_user_id)">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
                       </svg>

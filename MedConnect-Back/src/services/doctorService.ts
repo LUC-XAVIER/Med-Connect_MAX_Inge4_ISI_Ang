@@ -108,13 +108,18 @@ export class DoctorService {
     };
   }
 
-  // Search doctors
-  async searchDoctors(searchTerm: string, limit: number = 20): Promise<any[]> {
-    if (!searchTerm || searchTerm.trim().length < 2) {
-      throw new AppError('Search term must be at least 2 characters', HTTP_STATUS.BAD_REQUEST);
+  // Search doctors with filters
+  async searchDoctors(
+    searchTerm: string = '', 
+    filters?: { specialty?: string; verified?: boolean; hospital?: string },
+    limit: number = 20
+  ): Promise<any[]> {
+    // Allow empty search term if filters are provided
+    if (!searchTerm && !filters) {
+      return [];
     }
 
-    return await doctorRepository.search(searchTerm.trim(), limit);
+    return await doctorRepository.search(searchTerm.trim(), filters, limit);
   }
 
   // Verify doctor (admin only)

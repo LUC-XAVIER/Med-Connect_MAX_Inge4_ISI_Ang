@@ -39,6 +39,7 @@ export class RecordRepository {
     return {
       ...record,
       _id: record._id.toString(),
+      record_id: record._id.toString(), // Map _id to record_id for frontend
     } as IMedicalRecord;
   }
 
@@ -84,6 +85,7 @@ export class RecordRepository {
     return records.map((record) => ({
       ...record,
       _id: record._id.toString(),
+      record_id: record._id.toString(), // Map _id to record_id for frontend
     })) as IMedicalRecord[];
   }
 
@@ -106,6 +108,7 @@ export class RecordRepository {
     return records.map((record) => ({
       ...record,
       _id: record._id.toString(),
+      record_id: record._id.toString(), // Map _id to record_id for frontend
     })) as IMedicalRecord[];
   }
 
@@ -130,6 +133,7 @@ export class RecordRepository {
     return {
       ...result,
       _id: result._id.toString(),
+      record_id: result._id.toString(), // Map _id to record_id for frontend
     } as IMedicalRecord;
   }
 

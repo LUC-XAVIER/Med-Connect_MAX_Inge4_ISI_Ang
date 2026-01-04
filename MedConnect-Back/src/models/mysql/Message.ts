@@ -27,7 +27,7 @@ export interface ConversationPreview {
   conversation_partner_name: string;
   conversation_partner_profile_picture?: string;
   last_message: string;
-  last_message_time: Date;
+  last_message_time: string;
   unread_count: number;
   is_last_message_from_me: boolean;
 }

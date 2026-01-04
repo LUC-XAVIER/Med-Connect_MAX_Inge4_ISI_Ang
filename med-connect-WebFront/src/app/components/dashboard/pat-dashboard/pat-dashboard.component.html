@@ -21,9 +21,13 @@
             </svg>
             <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
           </button>
-          <div class="user-profile">
+          <div class="user-profile" (click)="openProfileModal()" style="cursor: pointer;">
             <div class="profile-avatar">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <img *ngIf="currentUser?.profile_picture" 
+                    [src]="getProfilePictureUrl(currentUser.profile_picture)" 
+                    [alt]="currentUser?.first_name + ' ' + currentUser?.last_name"
+                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+              <svg *ngIf="!currentUser?.profile_picture" width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
                 <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
               </svg>
@@ -207,7 +211,7 @@
           <div class="glass-card">
             <div class="card-header">
               <h2>Recent Medical Records</h2>
-              <button class="view-all-btn">View All</button>
+              <button class="view-all-btn" (click)="navigateToRecords()">View All</button>
             </div>
             <div class="card-content">
               <div class="empty-state">
@@ -239,3 +243,9 @@
     </div>
   </main>
 </div>
+
+<app-profile-modal 
+  [isOpen]="showProfileModal" 
+  (close)="closeProfileModal()"
+  (profileUpdated)="onProfileUpdated()">
+</app-profile-modal>

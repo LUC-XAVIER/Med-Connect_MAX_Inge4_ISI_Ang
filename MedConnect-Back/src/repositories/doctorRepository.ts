@@ -36,7 +36,7 @@ export class DoctorRepository {
     const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT 
         u.user_id, u.first_name, u.last_name, u.email, u.role, 
-        u.contact, u.address, u.is_active, u.created_at as user_created_at,
+        u.contact, u.address, u.profile_picture, u.is_active, u.created_at as user_created_at,
         d.doctor_id, d.specialty, d.license_number, d.hospital_affiliation, 
         d.verified, d.bio, d.created_at as doctor_created_at
       FROM users u
@@ -109,7 +109,7 @@ export class DoctorRepository {
 
     let query = `
       SELECT 
-        u.user_id, u.first_name, u.last_name, u.email, u.contact, u.address,
+        u.user_id, u.first_name, u.last_name, u.email, u.contact, u.address, u.profile_picture,
         d.doctor_id, d.specialty, d.license_number, d.hospital_affiliation, 
         d.verified, d.bio
       FROM users u
@@ -137,27 +137,53 @@ export class DoctorRepository {
     return rows;
   }
 
-  // Search doctors by name or specialty
-  async search(searchTerm: string, limit: number = 20): Promise<any[]> {
-    const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT 
-        u.user_id, u.first_name, u.last_name, u.email, u.contact, u.address,
+  // Search doctors by name, specialty, hospital, or bio
+  async search(searchTerm: string, filters?: { specialty?: string; verified?: boolean; hospital?: string }, limit: number = 20): Promise<any[]> {
+    let query = `
+      SELECT 
+        u.user_id, u.first_name, u.last_name, u.email, u.contact, u.address, u.profile_picture,
         d.doctor_id, d.specialty, d.license_number, d.hospital_affiliation, 
         d.verified, d.bio
       FROM users u
       JOIN doctors d ON u.user_id = d.user_id
-      WHERE u.is_active = true 
-        AND d.verified = true
-        AND (
-          u.first_name LIKE ? 
-          OR u.last_name LIKE ? 
-          OR d.specialty LIKE ?
-          OR d.hospital_affiliation LIKE ?
-        )
-      LIMIT ?`,
-      [`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, limit]
-    );
-
+      WHERE u.is_active = true
+    `;
+    
+    const params: any[] = [];
+    
+    // Add search term filters
+    if (searchTerm) {
+      query += ` AND (
+        u.first_name LIKE ? 
+        OR u.last_name LIKE ? 
+        OR d.specialty LIKE ?
+        OR d.hospital_affiliation LIKE ?
+        OR d.bio LIKE ?
+      )`;
+      const searchPattern = `%${searchTerm}%`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+    }
+    
+    // Add additional filters
+    if (filters?.specialty) {
+      query += ' AND d.specialty LIKE ?';
+      params.push(`%${filters.specialty}%`);
+    }
+    
+    if (filters?.verified !== undefined) {
+      query += ' AND d.verified = ?';
+      params.push(filters.verified);
+    }
+    
+    if (filters?.hospital) {
+      query += ' AND d.hospital_affiliation LIKE ?';
+      params.push(`%${filters.hospital}%`);
+    }
+    
+    query += ' LIMIT ?';
+    params.push(limit);
+    
+    const [rows] = await pool.query<RowDataPacket[]>(query, params);
     return rows;
   }
 

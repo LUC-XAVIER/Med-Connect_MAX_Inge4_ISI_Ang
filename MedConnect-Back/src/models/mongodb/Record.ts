@@ -4,7 +4,7 @@ export interface IMedicalRecord {
   patient_id: number;
   title: string;
   description?: string;
-  record_type: 'lab_result' | 'x_ray' | 'prescription' | 'doctor_note' | 'imaging_report' | 'other';
+  record_type: 'lab_result' | 'x_ray' | 'xray' | 'mri' | 'prescription' | 'doctor_note' | 'imaging_report' | 'vaccination' | 'other';
   file_url: string;
   file_name: string;
   file_size: number;
@@ -22,7 +22,7 @@ export interface ICreateMedicalRecord {
   patient_id: number;
   title: string;
   description?: string;
-  record_type: 'lab_result' | 'x_ray' | 'prescription' | 'doctor_note' | 'imaging_report' | 'other';
+  record_type: 'lab_result' | 'x_ray' | 'xray' | 'mri' | 'prescription' | 'doctor_note' | 'imaging_report' | 'vaccination' | 'other';
   file_url: string;
   file_name: string;
   file_size: number;

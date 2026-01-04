@@ -175,9 +175,17 @@ export class ConnectionService {
 
     // Verify all records belong to patient
     for (const recordId of recordIds) {
-      const record = await recordRepository.findById(recordId);
-      if (!record || record.patient_id !== patient.patient_id) {
-        throw new AppError(`Record ${recordId} not found or unauthorized`, HTTP_STATUS.FORBIDDEN);
+      try {
+        const record = await recordRepository.findById(recordId);
+        if (!record || record.patient_id !== patient.patient_id) {
+          throw new AppError(`Record ${recordId} not found or unauthorized`, HTTP_STATUS.FORBIDDEN);
+        }
+      } catch (error: any) {
+        // If record not found, throw a more descriptive error
+        if (error.message?.includes('not found')) {
+          throw new AppError(`Record ${recordId} not found`, HTTP_STATUS.NOT_FOUND);
+        }
+        throw error;
       }
     }
 

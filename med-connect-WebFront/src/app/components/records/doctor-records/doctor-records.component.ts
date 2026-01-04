@@ -49,9 +49,12 @@ export class DoctorRecordsComponent implements OnInit, OnDestroy {
   recordTypes = [
     { value: 'all', label: 'All Types' },
     { value: 'lab_result', label: 'Lab Result' },
-    { value: 'xray', label: 'X-Ray' },
+    { value: 'x_ray', label: 'X-Ray' },
+    { value: 'xray', label: 'X-Ray (Alt)' },
     { value: 'mri', label: 'MRI' },
     { value: 'prescription', label: 'Prescription' },
+    { value: 'doctor_note', label: 'Doctor Note' },
+    { value: 'imaging_report', label: 'Imaging Report' },
     { value: 'vaccination', label: 'Vaccination' },
     { value: 'other', label: 'Other' }
   ];

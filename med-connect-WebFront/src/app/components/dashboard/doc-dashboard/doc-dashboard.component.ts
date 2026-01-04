@@ -17,6 +17,8 @@ import { MatProgressSpinner } from "@angular/material/progress-spinner";
 import { AuthService } from '../../../services/auth.service';
 import { MessageService } from '../../../services/message.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -33,7 +35,8 @@ import { interval, Subscription } from 'rxjs';
     MatBadgeModule,
     MatProgressSpinner,
     SidebarComponent,
-    FormsModule
+    FormsModule,
+    ProfileModalComponent
   ],
   templateUrl: './doc-dashboard.component.html',
   styleUrls: ['./doc-dashboard.component.css']
@@ -46,6 +49,7 @@ export class DocDashboardComponent implements OnInit, OnDestroy {
   recentPrescriptions: any[] = [];
   currentUser: any = null;
   unreadCount: number = 0;
+  showProfileModal = false;
   private refreshSubscription?: Subscription;
 
   // Modal states
@@ -76,7 +80,8 @@ export class DocDashboardComponent implements OnInit, OnDestroy {
     private appointmentService: AppointmentService,
     private connectionService: ConnectionService,
     private authService: AuthService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -293,5 +298,30 @@ export class DocDashboardComponent implements OnInit, OnDestroy {
     if (hour < 12) return 'Good Morning';
     if (hour < 18) return 'Good Afternoon';
     return 'Good Evening';
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
   }
 }

@@ -76,10 +76,18 @@ export class DoctorController {
   // Search doctors
   async searchDoctors(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const searchTerm = req.query.q as string;
+      const searchTerm = req.query.q as string || '';
+      const specialty = req.query.specialty as string;
+      const verified = req.query.verified === 'true' ? true : req.query.verified === 'false' ? false : undefined;
+      const hospital = req.query.hospital as string;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const doctors = await doctorService.searchDoctors(searchTerm, limit);
+      const filters: { specialty?: string; verified?: boolean; hospital?: string } = {};
+      if (specialty) filters.specialty = specialty;
+      if (verified !== undefined) filters.verified = verified;
+      if (hospital) filters.hospital = hospital;
+
+      const doctors = await doctorService.searchDoctors(searchTerm, filters, limit);
 
       res.status(HTTP_STATUS.OK).json({
         success: true,

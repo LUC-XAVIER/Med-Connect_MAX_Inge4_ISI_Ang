@@ -7,12 +7,14 @@ import { AppointmentService } from '../../../services/appointment.service';
 import { MessageService } from '../../../services/message.service';
 import { AppointmentWithDetails, AppointmentStatus } from '../../../models/appointment.model';
 import { SidebarComponent } from '../sidebar/sidebar.component';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-pat-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, RouterModule, SidebarComponent, ProfileModalComponent],
   templateUrl: './pat-dashboard.component.html',
   styleUrl: './pat-dashboard.component.css'
 })
@@ -32,13 +34,36 @@ export class PatDashboardComponent implements OnInit, OnDestroy {
   recentAppointments: any[] = [];
   recentRecords: any[] = [];
 
+  showProfileModal = false;
+
   constructor(
     private authService: AuthService,
     private connectionService: ConnectionService,
     private appointmentService: AppointmentService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private profilePictureService: ProfilePictureService
   ) {}
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
+  }
 
   ngOnInit(): void {
     const userStr = localStorage.getItem('user');
@@ -125,6 +150,11 @@ export class PatDashboardComponent implements OnInit, OnDestroy {
   // Navigate to find doctors (connections page with find tab active)
   navigateToFindDoctors(): void {
     this.router.navigate(['/patient/connections']);
+  }
+
+  // Navigate to records page
+  navigateToRecords(): void {
+    this.router.navigate(['/patient/records']);
   }
 
   getGreeting(): string {

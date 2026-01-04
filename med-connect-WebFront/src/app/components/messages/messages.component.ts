@@ -1,12 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { SidebarComponent } from '../dashboard/sidebar/sidebar.component';
 import { MessageService, Message, ConversationPreview } from '../../services/message.service';
 import { ConnectionService } from '../../services/connection.service';
 import { ConnectionWithDetails } from '../../models/connection.model';
 import { AuthService } from '../../services/auth.service';
+import { WebSocketService } from '../../services/websocket.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -47,11 +48,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   // Auto-refresh subscription
   private refreshSubscription?: Subscription;
+  private websocketSubscription?: Subscription;
 
   constructor(
     private messageService: MessageService,
     private connectionService: ConnectionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private websocketService: WebSocketService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -60,11 +64,67 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.currentUser = JSON.parse(userStr);
       this.userRole = this.currentUser.role || 'patient';
     }
+
+    // Connect to WebSocket for realtime messaging
+    this.websocketService.connect();
+    
+    // Subscribe to incoming messages
+    this.websocketSubscription = this.websocketService.message$.subscribe((message: any) => {
+      // If message is for current conversation, add it
+      if (this.selectedConversation && 
+          (message.sender_id === this.selectedConversation.conversation_partner_id ||
+           message.receiver_id === this.selectedConversation.conversation_partner_id)) {
+        // Check if message already exists by message_id or by duplicate content check
+        const exists = this.messages.find(m => 
+          m.message_id === message.message_id || 
+          (m.sender_id === message.sender_id && 
+           m.created_at === message.created_at &&
+           m.message_content === message.message_content)
+        );
+        if (!exists) {
+          this.messages.push(message);
+          // Ensure messages stay sorted by timestamp
+          this.messages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          setTimeout(() => this.scrollToBottom(), 100);
+        }
+      }
+      // Refresh conversations to update last message (lightweight refresh)
+      this.messageService.getConversations().subscribe({
+        next: (conversations) => {
+          this.conversations = conversations;
+          this.applyFilters();
+        },
+        error: (error) => console.error('Error refreshing conversations:', error)
+      });
+      this.loadUnreadCount();
+    });
+
     this.loadConversations();
     this.loadConnectedUsers();
     this.loadUnreadCount();
 
-    // Auto-refresh conversations every 60 seconds to avoid rate limiting
+    // Check for userId query param to auto-select conversation
+    this.route.queryParams.subscribe(params => {
+      if (params['userId']) {
+        const userId = parseInt(params['userId']);
+        // Find conversation or create new one
+        const existingConv = this.conversations.find(c => c.conversation_partner_id === userId);
+        if (existingConv) {
+          this.selectConversation(existingConv);
+        } else {
+          // Try to find in connected users
+          const connectedUser = this.connectedUsers.find(u => {
+            const id = this.userRole === 'patient' ? u.doctor_user_id : u.patient_user_id;
+            return id === userId;
+          });
+          if (connectedUser) {
+            this.startNewConversation(connectedUser);
+          }
+        }
+      }
+    });
+
+    // Auto-refresh conversations every 60 seconds as fallback
     this.refreshSubscription = interval(60000).subscribe(() => {
       this.loadConversations();
       this.loadUnreadCount();
@@ -90,6 +150,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     if (this.refreshSubscription) {
       this.refreshSubscription.unsubscribe();
     }
+    if (this.websocketSubscription) {
+      this.websocketSubscription.unsubscribe();
+    }
+    // Don't disconnect websocket - keep it connected for other components
   }
 
   loadConversations(): void {
@@ -153,6 +217,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.isLoadingMessages = true;
     this.messageService.getConversation(userId).subscribe({
       next: (response) => {
+        // Messages come in ASC order from backend, use them as-is (oldest to newest)
         this.messages = response.messages;
         this.isLoadingMessages = false;
         // Scroll to bottom
@@ -160,12 +225,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading messages:', error);
-        if (error.status === 500 && error.error?.error?.includes('connected users')) {
-          // Users are not connected, show empty state
+        // Check if it's a connection error
+        const errorMsg = error.error?.error || error.error?.message || error.message || '';
+        if (errorMsg.includes('connected') || error.status === 403) {
           this.messages = [];
-          alert('You can only view messages with connected users. Please connect with this user first.');
+          // Don't show alert, just show empty state
         } else {
           this.messages = [];
+          console.error('Unexpected error loading messages:', error);
         }
         this.isLoadingMessages = false;
       }
@@ -179,15 +246,20 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
     this.isSendingMessage = true;
     const receiverId = this.selectedConversation.conversation_partner_id;
+    const messageContent = this.messageContent.trim();
+    this.messageContent = '';
 
+    // Always use HTTP for now to ensure reliability, WebSocket for receiving
     this.messageService.sendMessage({
       receiver_id: receiverId,
-      message_content: this.messageContent.trim()
+      message_content: messageContent
     }).subscribe({
       next: (message) => {
-        this.messageContent = '';
-        // Add message to list
-        this.messages.push(message);
+        // Add message to list if not already there
+        const exists = this.messages.find(m => m.message_id === message.message_id);
+        if (!exists) {
+          this.messages.push(message);
+        }
         // Refresh conversations to update last message
         this.loadConversations();
         // Scroll to bottom
@@ -196,7 +268,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error sending message:', error);
-        alert(error.message || 'Failed to send message');
+        alert(error.error?.message || error.message || 'Failed to send message');
+        this.messageContent = messageContent; // Restore message
         this.isSendingMessage = false;
       }
     });

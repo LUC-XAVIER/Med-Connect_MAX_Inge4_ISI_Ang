@@ -264,7 +264,7 @@ export const uploadRecordValidation = [
   body('record_type')
       .notEmpty()
       .withMessage('Record type is required')
-      .isIn(['lab_result', 'x_ray', 'prescription', 'doctor_note', 'imaging_report', 'other'])
+      .isIn(['lab_result', 'x_ray', 'xray', 'mri', 'prescription', 'doctor_note', 'imaging_report', 'vaccination', 'other'])
       .withMessage('Invalid record type'),
 
   body('record_date')
@@ -290,7 +290,7 @@ export const updateRecordValidation = [
 
   body('record_type')
       .optional()
-      .isIn(['lab_result', 'x_ray', 'prescription', 'doctor_note', 'imaging_report', 'other'])
+      .isIn(['lab_result', 'x_ray', 'xray', 'mri', 'prescription', 'doctor_note', 'imaging_report', 'vaccination', 'other'])
       .withMessage('Invalid record type'),
 
   body('record_date')

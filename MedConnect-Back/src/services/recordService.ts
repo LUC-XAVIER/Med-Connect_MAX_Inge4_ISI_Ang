@@ -62,7 +62,11 @@ export class RecordService {
 
     logger.info(`Medical record uploaded: patient_id=${patientId}, record_id=${record._id}`);
 
-    return record;
+    // Map _id to record_id for frontend compatibility
+    return {
+      ...record,
+      record_id: record._id || record.record_id,
+    };
   }
 
   // Get all records for a patient
@@ -91,8 +95,14 @@ export class RecordService {
     const total = await recordRepository.countByPatientId(patientId);
     const recordsByType = await recordRepository.getRecordsByType(patientId);
 
+    // Ensure all records have record_id mapped from _id
+    const mappedRecords = records.map(record => ({
+      ...record,
+      record_id: record._id || record.record_id,
+    }));
+
     return {
-      records,
+      records: mappedRecords,
       statistics: {
         total,
         by_type: recordsByType,

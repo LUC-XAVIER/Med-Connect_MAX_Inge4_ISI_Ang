@@ -264,9 +264,17 @@
           <span class="detail-label">Prescribed Date:</span>
           <span>{{ formatDate(selectedPrescription.prescribed_date) }}</span>
         </div>
+        <div class="detail-row" *ngIf="selectedPrescription.diagnosis">
+          <span class="detail-label">Diagnosis:</span>
+          <span>{{ selectedPrescription.diagnosis }}</span>
+        </div>
         <div class="detail-row" *ngIf="selectedPrescription.instructions">
           <span class="detail-label">Instructions:</span>
           <span>{{ selectedPrescription.instructions }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedPrescription.notes">
+          <span class="detail-label">Notes:</span>
+          <span>{{ selectedPrescription.notes }}</span>
         </div>
       </div>
 

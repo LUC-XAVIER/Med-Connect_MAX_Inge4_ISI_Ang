@@ -10,6 +10,8 @@
   margin-left: 260px;
   padding: 0;
   animation: fadeIn 0.5s ease-in;
+  width: calc(100% - 260px);
+  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -246,6 +248,8 @@
 .main-content-section {
   padding: 0 32px 32px 32px;
   animation: fadeIn 0.8s ease-in 0.4s both;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 /* Glass Card */

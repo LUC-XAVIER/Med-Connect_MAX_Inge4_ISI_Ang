@@ -8,6 +8,7 @@ import { DoctorService } from '../../../services/doctor.service';
 import { Doctor } from '../../../models/doctor.model';
 import { MessageService } from '../../../services/message.service';
 import { SidebarComponent } from '../../dashboard/sidebar/sidebar.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -55,7 +56,8 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
     private connectionService: ConnectionService,
     private doctorService: DoctorService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -138,31 +140,37 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
 
   // Filter doctors by search query and specialization
   filterDoctors(): void {
-    // Ensure allDoctors is an array
-    if (!Array.isArray(this.allDoctors)) {
-      console.error('allDoctors is not an array:', this.allDoctors);
-      this.filteredDoctors = [];
-      return;
+    // If search query exists, use backend search with filters
+    if (this.doctorSearchQuery.trim() || this.selectedSpecialization !== 'all') {
+      this.isLoadingDoctors = true;
+      const searchParams: any = {};
+      
+      if (this.doctorSearchQuery.trim()) {
+        searchParams.q = this.doctorSearchQuery.trim();
+      }
+      
+      if (this.selectedSpecialization !== 'all') {
+        searchParams.specialty = this.selectedSpecialization;
+      }
+      
+      // Only show verified doctors
+      searchParams.verified = true;
+      
+      this.doctorService.searchDoctors(searchParams).subscribe({
+        next: (doctors) => {
+          this.filteredDoctors = doctors;
+          this.isLoadingDoctors = false;
+        },
+        error: (error) => {
+          console.error('Error searching doctors:', error);
+          this.filteredDoctors = [];
+          this.isLoadingDoctors = false;
+        }
+      });
+    } else {
+      // No filters, show all doctors
+      this.filteredDoctors = [...this.allDoctors];
     }
-
-    let filtered = [...this.allDoctors];
-
-    // Filter by specialization
-    if (this.selectedSpecialization !== 'all') {
-      filtered = filtered.filter(d => (d.speciality?.toLowerCase() || '') === this.selectedSpecialization.toLowerCase() ); }
-
-    // Filter by search query
-    if (this.doctorSearchQuery.trim()) {
-      const query = this.doctorSearchQuery.toLowerCase();
-      filtered = filtered.filter(d =>
-        (d.first_name?.toLowerCase() || '').includes(query) ||
-        (d.last_name?.toLowerCase() || '').includes(query) ||
-        (d.speciality?.toLowerCase() || '').includes(query)
-      );
-    }
-
-    this.filteredDoctors = filtered;
-    console.log('Filtered doctors:', this.filteredDoctors);
   }
 
   // Filter by specialization
@@ -292,5 +300,28 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  navigateToMessages(doctorUserId: number): void {
+    this.router.navigate(['/patient/messages'], { queryParams: { userId: doctorUserId } });
+  }
+
+  navigateToAppointments(doctorUserId: number): void {
+    this.router.navigate(['/patient/appointments'], { queryParams: { doctorId: doctorUserId } });
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
+  }
+
+  // Get all available specializations from loaded doctors
+  getAvailableSpecializations(): string[] {
+    const specializations = new Set<string>();
+    this.allDoctors.forEach(doctor => {
+      if (doctor.speciality) {
+        specializations.add(doctor.speciality);
+      }
+    });
+    return Array.from(specializations).sort();
   }
 }

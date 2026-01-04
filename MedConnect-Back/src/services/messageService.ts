@@ -50,9 +50,40 @@ export class MessageService {
     await messageRepository.markAsRead(otherUserId, userId);
   }
 
-  // Get all conversations for a user
+  // Get all conversations for a user (includes both existing conversations and connected users)
   async getUserConversations(userId: number): Promise<ConversationPreview[]> {
-    return await messageRepository.getConversations(userId);
+    const existingConversations = await messageRepository.getConversations(userId);
+    
+    // Also get all connected users to show in conversation list
+    const connectedUsers = await messageRepository.getConnectedUsers(userId);
+    
+    // Merge: use existing conversations, add connected users without conversations
+    const conversationMap = new Map<number, ConversationPreview>();
+    
+    // Add existing conversations
+    existingConversations.forEach(conv => {
+      conversationMap.set(conv.conversation_partner_id, conv);
+    });
+    
+    // Add connected users without existing conversations
+    connectedUsers.forEach(user => {
+      if (!conversationMap.has(user.user_id)) {
+        conversationMap.set(user.user_id, {
+          conversation_partner_id: user.user_id,
+          conversation_partner_name: user.name,
+          conversation_partner_profile_picture: user.profile_picture || undefined,
+          last_message: '',
+          last_message_time: new Date().toISOString(),
+          unread_count: 0,
+          is_last_message_from_me: false
+        });
+      }
+    });
+    
+    return Array.from(conversationMap.values()).sort((a, b) => {
+      // Sort by last message time, newest first
+      return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
+    });
   }
 
   // Get unread message count

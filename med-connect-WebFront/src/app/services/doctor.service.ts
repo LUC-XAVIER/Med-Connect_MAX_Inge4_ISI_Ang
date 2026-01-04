@@ -43,20 +43,28 @@ export class DoctorService {
    * Search doctors by various criteria
    */
   searchDoctors(params: {
-    name?: string;
-    specialization?: string;
-    minRating?: number;
+    q?: string;
+    specialty?: string;
+    verified?: boolean;
+    hospital?: string;
+    limit?: number;
   }): Observable<Doctor[]> {
     let httpParams = new HttpParams();
 
-    if (params.name) {
-      httpParams = httpParams.set('name', params.name);
+    if (params.q) {
+      httpParams = httpParams.set('q', params.q);
     }
-    if (params.specialization) {
-      httpParams = httpParams.set('specialization', params.specialization);
+    if (params.specialty) {
+      httpParams = httpParams.set('specialty', params.specialty);
     }
-    if (params.minRating) {
-      httpParams = httpParams.set('minRating', params.minRating.toString());
+    if (params.verified !== undefined) {
+      httpParams = httpParams.set('verified', params.verified.toString());
+    }
+    if (params.hospital) {
+      httpParams = httpParams.set('hospital', params.hospital);
+    }
+    if (params.limit) {
+      httpParams = httpParams.set('limit', params.limit.toString());
     }
 
     return this.http.get<ApiResponse<Doctor[]>>(`${this.apiUrl}/search`, { params: httpParams })
