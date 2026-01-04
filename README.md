@@ -200,5 +200,5 @@ If you'd like, I can also:
 - Generate an OpenAPI (Swagger) spec from the routes.
 
 ---
-Last updated: polished README with API list and startup instructions.
+Last updated: polished README 
 

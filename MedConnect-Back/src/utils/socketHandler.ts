@@ -20,7 +20,7 @@ export const initializeSocket = (httpServer: HTTPServer): SocketIOServer => {
   });
 
   // Authentication middleware for Socket.io
-  io.use((socket: Socket, next) => {
+  io.use((socket: Socket, next: (err?: any) => void) => {
     const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
 
     if (!token) {
