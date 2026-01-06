@@ -1,0 +1,115 @@
+<div class="dashboard-wrapper">
+  <app-sidebar userRole="doctor"></app-sidebar>
+
+  <main class="dashboard-content">
+    <div class="header-section">
+      <div class="header-top">
+        <div class="greeting-section">
+          <h1 class="greeting-title">My Ratings & Reviews</h1>
+          <p class="greeting-subtitle">See what patients are saying about you</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-notification" title="Notifications" [attr.data-count]="unreadCount > 0 ? unreadCount : null">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </button>
+          <div class="user-profile" (click)="openProfileModal()" style="cursor: pointer;">
+            <div class="profile-avatar">
+              <img *ngIf="currentUser?.profile_picture" 
+                    [src]="getProfilePictureUrl(currentUser.profile_picture)" 
+                    [alt]="currentUser?.first_name + ' ' + currentUser?.last_name"
+                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+              <svg *ngIf="!currentUser?.profile_picture" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="profile-details">
+              <span class="profile-name">{{ currentUser?.first_name }} {{ currentUser?.last_name }}</span>
+              <span class="profile-role">Doctor</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content-section">
+      <div class="glass-card">
+        <!-- Stats Section -->
+        <div *ngIf="stats && stats.total_ratings > 0" class="ratings-stats">
+          <div class="stat-card">
+            <div class="stat-value-large">{{ stats.average_rating ? stats.average_rating.toFixed(1) : '0.0' }}</div>
+            <div class="stat-label">Average Rating</div>
+            <div class="stat-stars">
+              <svg *ngFor="let i of getStarArray(getRoundedRating(stats.average_rating || 0))" width="20" height="20" viewBox="0 0 24 24" fill="#FFD700">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value-large">{{ stats.total_ratings || 0 }}</div>
+            <div class="stat-label">Total Ratings</div>
+          </div>
+          <div class="stat-card" *ngIf="stats.rating_distribution">
+            <div class="stat-value-large">{{ stats.rating_distribution['5'] || 0 }}</div>
+            <div class="stat-label">5 Star Ratings</div>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading ratings...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoading && ratings.length === 0" class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <h3>No Ratings Yet</h3>
+          <p>You haven't received any ratings from patients yet</p>
+        </div>
+
+        <!-- Ratings List -->
+        <div *ngIf="!isLoading && ratings.length > 0" class="ratings-list">
+          <div *ngFor="let rating of ratings" class="rating-card">
+            <div class="rating-header">
+              <div class="rating-user">
+                <div class="user-avatar">
+                  {{ (rating.patient_name || 'Anonymous').charAt(0) }}
+                </div>
+                <div>
+                  <h4>{{ rating.patient_name || 'Anonymous Patient' }}</h4>
+                  <span class="rating-date">{{ formatDate(rating.created_at) }}</span>
+                </div>
+              </div>
+              <div class="rating-stars-display">
+                <svg *ngFor="let i of [1,2,3,4,5]; let idx = index" 
+                     width="20" height="20" viewBox="0 0 24 24" 
+                     [attr.fill]="idx < (rating.rating || 0) ? '#FFD700' : '#E5E7EB'">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span class="rating-value-text">{{ rating.rating || 0 }}/5</span>
+              </div>
+            </div>
+            <div *ngIf="rating.review" class="rating-review">
+              <p>{{ rating.review }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+
+
+<app-profile-modal 
+  [isOpen]="showProfileModal" 
+  (close)="closeProfileModal()"
+  (profileUpdated)="onProfileUpdated()">
+</app-profile-modal>
+

@@ -1,0 +1,135 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { SidebarComponent } from '../../dashboard/sidebar/sidebar.component';
+import { DoctorRatingService, DoctorRating, DoctorRatingStats } from '../../../services/doctor-rating.service';
+import { AuthService } from '../../../services/auth.service';
+import { MessageService } from '../../../services/message.service';
+import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
+
+
+@Component({
+  selector: 'app-doctor-view-ratings',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, ProfileModalComponent],
+  templateUrl: './doctor-view-ratings.component.html',
+  styleUrls: ['./doctor-view-ratings.component.css']
+})
+export class DoctorViewRatingsComponent implements OnInit, OnDestroy {
+  ratings: DoctorRating[] = [];
+  stats: DoctorRatingStats | null = null;
+  isLoading = true;
+  currentUser: any = null;
+  unreadCount: number = 0;
+  private refreshSubscription?: Subscription;
+
+  //Modal states
+  showProfileModal = false;
+
+  constructor(
+    private ratingService: DoctorRatingService,
+    private authService: AuthService,
+    private messageService: MessageService,
+    private profilePictureService: ProfilePictureService
+  ) {}
+
+  ngOnInit(): void {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+    this.loadRatings();
+    this.loadUnreadCount();
+    
+    this.refreshSubscription = interval(60000).subscribe(() => {
+      this.loadUnreadCount();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
+  }
+
+  loadUnreadCount(): void {
+    this.messageService.getUnreadCount().subscribe({
+      next: (count: number) => {
+        this.unreadCount = count;
+      },
+      error: (error: any) => {
+        console.error('Error loading unread count:', error);
+        this.unreadCount = 0;
+      }
+    });
+  }
+
+  loadRatings(): void {
+    if (!this.currentUser?.user_id) {
+      this.isLoading = false;
+      return;
+    }
+
+    this.isLoading = true;
+    this.ratingService.getDoctorRatings(this.currentUser.user_id).subscribe({
+      next: (response) => {
+        this.ratings = response.ratings;
+        this.stats = response.stats;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading ratings:', error);
+        this.ratings = [];
+        this.isLoading = false;
+      }
+    });
+  }
+
+  getStarArray(rating: number): number[] {
+    // Ensure rating is a number and within valid range
+    const numRating = typeof rating === 'number' ? rating : parseInt(String(rating), 10);
+    const validRating = Math.max(0, Math.min(5, numRating || 0));
+    return Array(5).fill(0).map((_, i) => i < validRating ? 1 : 0);
+  }
+
+  getRoundedRating(rating: number): number {
+    return Math.round(rating);
+  }
+
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
+  }
+}
+

@@ -1,0 +1,382 @@
+<div class="dashboard-wrapper">
+  <app-sidebar userRole="doctor"></app-sidebar>
+
+  <main class="dashboard-container">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-background">
+        <div class="header-gradient"></div>
+        <div class="header-pattern"></div>
+      </div>
+      <div class="header-top">
+        <div class="greeting-section">
+          <h1 class="greeting-title">Welcome back, Dr. {{ currentUser?.first_name }} {{ currentUser?.last_name }}</h1>
+          <p class="greeting-subtitle">Here's your dashboard overview for today</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-notification" title="Notifications" [attr.data-count]="unreadCount > 0 ? unreadCount : null">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </button>
+          <div class="user-profile" (click)="openProfileModal()" style="cursor: pointer;">
+            <div class="profile-avatar">
+                  <img *ngIf="currentUser?.profile_picture" 
+                    [src]="getProfilePictureUrl(currentUser.profile_picture)" 
+                    [alt]="currentUser?.first_name + ' ' + currentUser?.last_name"
+                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+              <svg *ngIf="!currentUser?.profile_picture" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="profile-details">
+              <span class="profile-name">Dr. {{ currentUser?.first_name }} {{ currentUser?.last_name }}</span>
+              <span class="profile-role">Doctor</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Cards Section -->
+    <div class="kpi-section">
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-card-primary">
+          <div class="kpi-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="kpi-content">
+            <p class="kpi-label">Today's Appointments</p>
+            <h2 class="kpi-value">{{ stats.todayAppointments }}</h2>
+            <p class="kpi-change positive">+{{ stats.todayAppointments }} scheduled</p>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card-success">
+          <div class="kpi-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="kpi-content">
+            <p class="kpi-label">Total Patients</p>
+            <h2 class="kpi-value">{{ stats.totalPatients }}</h2>
+            <p class="kpi-change positive">Active connections</p>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card-warning">
+          <div class="kpi-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+              <path d="M14 2v6h6M16 13H8m8 4H8" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="kpi-content">
+            <p class="kpi-label">Prescriptions</p>
+            <h2 class="kpi-value">{{ stats.totalPrescriptions }}</h2>
+            <p class="kpi-change">Total issued</p>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card-info">
+          <div class="kpi-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              <path d="M20 8v6M23 11h-6" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="kpi-content">
+            <p class="kpi-label">Pending Requests</p>
+            <h2 class="kpi-value">{{ stats.pendingRequests }}</h2>
+            <p class="kpi-change">Awaiting approval</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="main-content">
+      <div class="content-grid">
+        <!-- Left Column -->
+        <div class="left-column">
+          <!-- Today's Appointments with Action Buttons -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">TODAY'S APPOINTMENTS</h3>
+              <button class="btn-view-all" (click)="navigateToAppointments()">View All</button>
+            </div>
+            <div class="card-body">
+              <div *ngIf="isLoading" class="loading-state">
+                <mat-spinner diameter="32"></mat-spinner>
+                <p>Loading appointments...</p>
+              </div>
+              <div *ngIf="!isLoading && todayAppointments.length === 0" class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <p>No appointments scheduled for today</p>
+              </div>
+              <div *ngIf="!isLoading && todayAppointments.length > 0" class="appointments-list">
+                <div *ngFor="let appointment of todayAppointments" class="appointment-row">
+                  <div class="appointment-time">
+                    <span class="time">{{ appointment.appointment_time }}</span>
+                  </div>
+                  <div class="appointment-details">
+                    <h4 class="patient-name">{{ appointment.patient_name }}</h4>
+                    <p class="appointment-reason">{{ appointment.reason }}</p>
+                  </div>
+                  <div class="appointment-status">
+                    <span class="status-badge" [ngClass]="'status-' + appointment.status">
+                      {{ appointment.status | titlecase }}
+                    </span>
+                  </div>
+                  <div class="appointment-actions-inline">
+                    <button
+                      *ngIf="appointment.status === AppointmentStatus.PENDING"
+                      class="btn-action btn-confirm"
+                      (click)="openAppointmentModal(appointment)"
+                      title="Manage">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                    </button>
+                    <button
+                      *ngIf="appointment.status === AppointmentStatus.CONFIRMED"
+                      class="btn-action btn-complete"
+                      (click)="openAppointmentModal(appointment)"
+                      title="Manage">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts remain the same -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">NEW PATIENTS</h3>
+              <select class="period-select">
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+                <option>Last 3 Months</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom: 16px;">
+                <p style="font-size: 28px; font-weight: 700; color: #1F2937; margin: 0;">593</p>
+              </div>
+              <div class="chart-wrapper">
+                <!-- Your existing chart SVG -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+          <!-- Doctor Profile Card -->
+          <div class="doctor-profile-card">
+            <div class="profile-header-image">
+              <div class="profile-avatar-large"></div>
+            </div>
+            <div class="profile-content">
+              <h3>{{ currentUser?.first_name }} {{ currentUser?.last_name }}</h3>
+              <p class="role">Doctor</p>
+              <p>Managing patient care and appointments</p>
+              <button class="btn-assign">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                  <line x1="20" y1="8" x2="20" y2="14" stroke="currentColor" stroke-width="2"/>
+                  <line x1="23" y1="11" x2="17" y2="11" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                View Profile
+              </button>
+              <div class="profile-stats">
+                <div class="stat-item">
+                  <p class="stat-value">{{ stats.totalAppointments }}</p>
+                  <p class="stat-label">Appointments</p>
+                </div>
+                <div class="stat-item">
+                  <p class="stat-value">{{ stats.totalPatients }}</p>
+                  <p class="stat-label">Patients</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Connection Requests -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">Pending Requests</h3>
+              <button class="btn-view-all" (click)="navigateToPatients()">View All</button>
+            </div>
+            <div class="card-body">
+              <div *ngIf="isLoading" class="loading-state">
+                <mat-spinner diameter="32"></mat-spinner>
+              </div>
+              <div *ngIf="!isLoading && pendingConnections.length === 0" class="empty-state">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <p>No pending requests</p>
+              </div>
+              <div *ngIf="!isLoading && pendingConnections.length > 0" class="connections-list">
+                <div *ngFor="let connection of pendingConnections" class="connection-item">
+                  <div class="connection-avatar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="connection-info">
+                    <h4>{{ connection.patient_first_name }} {{ connection.patient_last_name }}</h4>
+                    <p>Requested {{ connection.created_at | date:'short' }}</p>
+                  </div>
+                  <div class="connection-actions">
+                    <button class="btn-approve" (click)="approveConnection(connection.connection_id)" title="Approve">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                    </button>
+                    <button class="btn-reject" (click)="rejectConnection(connection.connection_id)" title="Reject">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">Quick Actions</h3>
+            </div>
+            <div class="card-body">
+              <div class="quick-actions-grid">
+                <button class="action-button" (click)="navigateToAppointments()">
+                  <div class="action-icon action-icon-primary">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <span>Schedule</span>
+                </button>
+                <button class="action-button" (click)="navigateToPrescriptions()">
+                  <div class="action-icon action-icon-success">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                      <path d="M14 2v6h6M16 13H8m8 4H8" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <span>Prescriptions</span>
+                </button>
+                <button class="action-button" (click)="navigateToPatients()">
+                  <div class="action-icon action-icon-info">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <span>Patients</span>
+                </button>
+                <button class="action-button" (click)="navigateToMessages()">
+                  <div class="action-icon action-icon-warning">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <span>Messages</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Appointment Status Modal -->
+  <div *ngIf="showAppointmentModal" class="modal-overlay" (click)="closeAppointmentModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Manage Appointment</h3>
+        <button class="close-btn" (click)="closeAppointmentModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="appointment-info">
+          <p><strong>Patient:</strong> {{ selectedAppointment?.patient_name }}</p>
+          <p><strong>Date:</strong> {{ selectedAppointment?.appointment_date | date:'fullDate' }}</p>
+          <p><strong>Time:</strong> {{ selectedAppointment?.appointment_time }}</p>
+          <p><strong>Reason:</strong> {{ selectedAppointment?.reason }}</p>
+          <p><strong>Status:</strong> <span class="status-badge" [ngClass]="'status-' + selectedAppointment?.status">{{ selectedAppointment?.status | titlecase }}</span></p>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes (Optional)</label>
+          <textarea
+            id="notes"
+            [(ngModel)]="appointmentNotes"
+            class="form-control"
+            rows="3"
+            placeholder="Add any notes about this appointment..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            *ngIf="selectedAppointment?.status === AppointmentStatus.PENDING"
+            class="btn btn-success"
+            (click)="updateAppointmentStatus(AppointmentStatus.CONFIRMED)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Confirm Appointment
+          </button>
+          <button
+            *ngIf="selectedAppointment?.status === AppointmentStatus.CONFIRMED"
+            class="btn btn-primary"
+            (click)="updateAppointmentStatus(AppointmentStatus.COMPLETED)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Mark as Completed
+          </button>
+          <button
+            class="btn btn-danger"
+            (click)="updateAppointmentStatus(AppointmentStatus.CANCELLED)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Cancel Appointment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-profile-modal 
+  [isOpen]="showProfileModal" 
+  (close)="closeProfileModal()"
+  (profileUpdated)="onProfileUpdated()">
+</app-profile-modal>

@@ -1,0 +1,250 @@
+<div class="dashboard-wrapper">
+  <app-sidebar userRole="patient"></app-sidebar>
+
+  <main class="dashboard-content">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-background">
+        <div class="header-gradient"></div>
+        <div class="header-pattern"></div>
+      </div>
+
+      <div class="header-top">
+        <div class="greeting-section">
+          <h1 class="greeting-title">Search Doctors</h1>
+          <p class="greeting-subtitle">Find and connect with healthcare professionals</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-notification" title="Notifications" [attr.data-count]="unreadCount > 0 ? unreadCount : null">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </button>
+          <div class="user-profile" (click)="openProfileModal()" style="cursor: pointer;">
+            <div class="profile-avatar">
+              <img *ngIf="currentUser?.profile_picture" 
+                    [src]="getProfilePictureUrl(currentUser.profile_picture)" 
+                    [alt]="currentUser?.first_name + ' ' + currentUser?.last_name"
+                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+              <svg *ngIf="!currentUser?.profile_picture" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="profile-details">
+              <span class="profile-name">{{ currentUser?.first_name }} {{ currentUser?.last_name }}</span>
+              <span class="profile-role">Patient</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content-section">
+      <div class="glass-card">
+        <!-- Search Bar -->
+        <div class="search-bar-container">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search by name or specialty..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearchInput()" />
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-container">
+           <div class="filter-group">
+             <label>Specialty</label>
+             <select [(ngModel)]="selectedspeciality" (change)="onspecialityChange()" class="filter-select">
+               <option value="all">All Specialties</option>
+               <option *ngFor="let spec of specialties.slice(1)" [value]="spec">{{ spec }}</option>
+             </select>
+           </div>
+          <div class="filter-group">
+            <label>Verification</label>
+            <select [(ngModel)]="selectedVerified" (change)="onVerifiedChange()" class="filter-select">
+              <option value="all">All Doctors</option>
+              <option value="verified">Verified Only</option>
+              <option value="unverified">Unverified Only</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Hospital</label>
+            <input
+              type="text"
+              class="filter-input"
+              placeholder="Filter by hospital..."
+              [(ngModel)]="selectedHospital"
+              (input)="onHospitalChange()" />
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <div class="spinner"></div>
+          <p>Searching doctors...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoading && filteredDoctors.length === 0" class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <h3>No Doctors Found</h3>
+          <p>Try adjusting your search criteria</p>
+        </div>
+
+        <!-- Doctors Grid -->
+        <div *ngIf="!isLoading && filteredDoctors.length > 0" class="doctors-grid">
+          <div *ngFor="let doctor of filteredDoctors" class="doctor-card" (click)="openDoctorModal(doctor)">
+            <div class="doctor-card-header">
+              <div class="doctor-avatar-large" [style.background]="getAvatarColor(doctor.user_id)">
+                <img *ngIf="doctor.profile_picture"
+                     [src]="getProfilePictureUrl(doctor.profile_picture)"
+                     [alt]="doctor.first_name + ' ' + doctor.last_name"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span *ngIf="!doctor.profile_picture">
+                  {{ getInitials(doctor.first_name, doctor.last_name) }}
+                </span>
+              </div>
+              <div class="doctor-info">
+                <h3>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h3>
+                <p class="specialty">{{ doctor.speciality }}</p>
+                <div class="doctor-meta">
+                  <span *ngIf="doctor.hospital_affiliation" class="hospital">🏥 {{ doctor.hospital_affiliation }}</span>
+                  <span *ngIf="doctor.verified" class="verified-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+                      <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Verified
+                  </span>
+                </div>
+              </div>
+            </div>
+             <div class="doctor-rating">
+               <div class="stars">
+                 <svg *ngFor="let i of [1,2,3,4,5]; let idx = index" 
+                      width="16" height="16" viewBox="0 0 24 24" 
+                      [attr.fill]="idx < (doctor.rating || 0) ? '#FFD700' : '#E5E7EB'">
+                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                 </svg>
+               </div>
+               <span class="rating-text">{{ (doctor.rating || 0).toFixed(1) }} ({{ doctor.total_ratings || 0 }} reviews)</span>
+             </div>
+            <div class="doctor-actions">
+              <button class="btn-action" (click)="navigateToMessages(doctor.user_id); $event.stopPropagation()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Message
+              </button>
+              <button class="btn-action" (click)="navigateToAppointments(doctor.user_id); $event.stopPropagation()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Book
+              </button>
+            </div>
+            <div class="doctor-summary" *ngIf="doctor.bio || doctor.years_of_experience || doctor.consultation_fee">
+              <p *ngIf="doctor.bio">{{ doctor.bio }}</p>
+              <p *ngIf="doctor.years_of_experience">Experience: {{ doctor.years_of_experience }} yrs</p>
+              <p *ngIf="doctor.consultation_fee">Consultation: {{ doctor.consultation_fee | currency:'USD':'symbol':'1.0-0' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Doctor Detail Modal -->
+<div *ngIf="showDoctorModal && selectedDoctor" class="modal-overlay" (click)="closeDoctorModal()">
+  <div class="modal-dialog modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Doctor Details</h3>
+      <button class="close-btn" (click)="closeDoctorModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="doctor-detail-content">
+        <div class="doctor-detail-header">
+          <div class="doctor-avatar-large" [style.background]="getAvatarColor(selectedDoctor.user_id)">
+            <img *ngIf="selectedDoctor.profile_picture"
+                 [src]="getProfilePictureUrl(selectedDoctor.profile_picture)"
+                 [alt]="selectedDoctor.first_name + ' ' + selectedDoctor.last_name"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span *ngIf="!selectedDoctor.profile_picture">
+              {{ getInitials(selectedDoctor.first_name, selectedDoctor.last_name) }}
+            </span>
+          </div>
+          <div class="doctor-detail-info">
+            <h2>Dr. {{ selectedDoctor.first_name }} {{ selectedDoctor.last_name }}</h2>
+            <p class="specialty-large">{{ selectedDoctor.speciality }}</p>
+            <div class="doctor-detail-meta">
+              <span *ngIf="selectedDoctor.hospital_affiliation" class="hospital">🏥 {{ selectedDoctor.hospital_affiliation }}</span>
+              <span *ngIf="selectedDoctor.verified" class="verified-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+                  <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Verified Doctor
+              </span>
+            </div>
+            <div class="doctor-rating-large">
+              <div class="stars">
+                <svg *ngFor="let i of [1,2,3,4,5]; let idx = index" 
+                     width="20" height="20" viewBox="0 0 24 24" 
+                     [attr.fill]="idx < (selectedDoctor.rating || 0) ? '#FFD700' : '#E5E7EB'">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <span class="rating-text-large">{{ (selectedDoctor.rating || 0).toFixed(1) }} / 5.0</span>
+              <span class="reviews-count">({{ selectedDoctor.total_ratings || 0 }} reviews)</span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="selectedDoctor.bio" class="doctor-bio">
+          <h4>About</h4>
+          <p>{{ selectedDoctor.bio }}</p>
+        </div>
+        <div class="doctor-extra-info">
+          <p *ngIf="selectedDoctor.email">Email: {{ selectedDoctor.email }}</p>
+          <p *ngIf="selectedDoctor.phone_number">Phone: {{ selectedDoctor.phone_number }}</p>
+          <p *ngIf="selectedDoctor.years_of_experience">Experience: {{ selectedDoctor.years_of_experience }} yrs</p>
+          <p *ngIf="selectedDoctor.consultation_fee">Consultation: {{ selectedDoctor.consultation_fee | currency:'USD':'symbol':'1.0-0' }}</p>
+        </div>
+        <div class="doctor-detail-actions">
+          <button class="btn-primary" (click)="navigateToMessages(selectedDoctor.user_id)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Send Message
+          </button>
+          <button class="btn-primary" (click)="navigateToAppointments(selectedDoctor.user_id)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Book Appointment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-profile-modal 
+  [isOpen]="showProfileModal" 
+  (close)="closeProfileModal()"
+  (profileUpdated)="onProfileUpdated()">
+</app-profile-modal>
+

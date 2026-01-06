@@ -1,0 +1,309 @@
+<div class="dashboard-wrapper">
+  <app-sidebar userRole="doctor"></app-sidebar>
+
+  <main class="dashboard-container">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-top">
+        <div class="greeting-section">
+          <h1 class="greeting-title">Prescriptions</h1>
+          <p class="greeting-subtitle">Create and manage prescriptions for your patients</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-notification" title="Notifications" [attr.data-count]="unreadCount > 0 ? unreadCount : null">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="notification-count" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </button>
+          <div class="user-profile" (click)="openProfileModal()" style="cursor: pointer;">
+            <div class="profile-avatar">
+              <img *ngIf="currentUser?.profile_picture" 
+                    [src]="getProfilePictureUrl(currentUser.profile_picture)" 
+                    [alt]="currentUser?.first_name + ' ' + currentUser?.last_name"
+                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+              <svg *ngIf="!currentUser?.profile_picture" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="profile-details">
+              <span class="profile-name">{{ currentUser?.first_name }} {{ currentUser?.last_name }}</span>
+              <span class="profile-role">Doctor</span>
+            </div>
+          </div>
+          <button class="btn-view-all" (click)="openCreateModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 6px;">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Create Prescription
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="main-content-section">
+      <div class="glass-card">
+        <div class="filters-section">
+          <div class="search-bar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search prescriptions..."
+              [(ngModel)]="searchQuery"
+              (input)="applyFilters()" />
+          </div>
+
+          <div class="filters-row">
+            <select class="filter-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+              <option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</option>
+            </select>
+
+            <button class="btn-secondary" (click)="selectedStatus = 'all'; searchQuery = ''; applyFilters()">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading prescriptions...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoading && filteredPrescriptions.length === 0" class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+            <path d="M14 2v6h6M16 13H8m8 4H8m2-8H8" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <h3>No Prescriptions Found</h3>
+          <p>Create your first prescription for a patient.</p>
+          <button class="btn-primary" (click)="openCreateModal()">Create Prescription</button>
+        </div>
+
+        <!-- Prescriptions Grid -->
+        <div *ngIf="!isLoading && filteredPrescriptions.length > 0" class="prescriptions-grid">
+          <div *ngFor="let prescription of filteredPrescriptions" 
+               class="prescription-card"
+               [ngClass]="getStatusClass(prescription.status)"
+               (click)="openPrescriptionModal(prescription)">
+            <div class="prescription-card-header">
+              <div class="prescription-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M14 2v6h6M16 13H8m8 4H8m2-8H8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </div>
+              <span class="prescription-status-badge" [ngClass]="getStatusClass(prescription.status)">
+                {{ prescription.status | titlecase }}
+              </span>
+            </div>
+
+            <div class="prescription-card-body">
+              <h3>{{ prescription.medication_name || 'Prescription' }}</h3>
+              <div class="prescription-details">
+                <div class="detail-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span>{{ prescription.patient_name || 'Unknown Patient' }}</span>
+                </div>
+                <div class="detail-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span>Prescribed: {{ formatDate(prescription.prescribed_date) }}</span>
+                </div>
+                <div class="detail-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span>{{ prescription.dosage }} - {{ prescription.frequency }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="prescription-card-footer">
+              <button class="btn-view-details">View Details</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Create Prescription Modal -->
+<div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create Prescription</h3>
+      <button class="close-btn" (click)="closeCreateModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-message">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
+          <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Success Message -->
+      <div *ngIf="successMessage" class="success-message">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+          <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <div class="form-group">
+        <label>Patient *</label>
+        <select class="form-control" [(ngModel)]="createForm.patient_user_id" name="patient_user_id" required>
+          <option [ngValue]="null">Select patient...</option>
+          <option *ngFor="let connection of connectedPatients" [ngValue]="connection.patient_user_id || connection.patient_id">
+            {{ getPatientDisplayName(connection) }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Appointment (Optional)</label>
+        <select class="form-control" [(ngModel)]="createForm.appointment_id" name="appointment_id">
+          <option [ngValue]="undefined">No appointment</option>
+          <option *ngFor="let appointment of recentAppointments" [ngValue]="appointment.appointment_id">
+            {{ appointment.patient_name }} - {{ formatDate(appointment.appointment_date) }} {{ appointment.appointment_time }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Diagnosis *</label>
+        <textarea class="form-control" [(ngModel)]="createForm.diagnosis" name="diagnosis" rows="3" placeholder="Enter diagnosis (minimum 10 characters)" required></textarea>
+        <small class="text-muted">Minimum 10 characters required</small>
+      </div>
+
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <textarea class="form-control" [(ngModel)]="createForm.notes" name="notes" rows="2" placeholder="Additional notes..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Medication Name *</label>
+        <input type="text" class="form-control" [(ngModel)]="createForm.medication_name" name="medication_name" placeholder="e.g., Amoxicillin 500mg" required />
+      </div>
+
+      <div class="form-group">
+        <label>Dosage *</label>
+        <input type="text" class="form-control" [(ngModel)]="createForm.dosage" name="dosage" placeholder="e.g., 500mg" required />
+      </div>
+
+      <div class="form-group">
+        <label>Frequency *</label>
+        <input type="text" class="form-control" [(ngModel)]="createForm.frequency" name="frequency" placeholder="e.g., Twice daily" required />
+      </div>
+
+      <div class="form-group">
+        <label>Duration *</label>
+        <input type="text" class="form-control" [(ngModel)]="createForm.duration" name="duration" placeholder="e.g., 7 days" required />
+      </div>
+
+      <div class="form-group">
+        <label>Instructions</label>
+        <textarea class="form-control" [(ngModel)]="createForm.instructions" name="instructions" rows="3" placeholder="Additional instructions for the patient..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeCreateModal()" [disabled]="isCreating">Cancel</button>
+        <button class="btn-primary" (click)="createPrescription()" [disabled]="isCreating">
+          {{ isCreating ? 'Creating...' : 'Create Prescription' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Prescription Detail Modal -->
+<div *ngIf="showPrescriptionModal && selectedPrescription" class="modal-overlay" (click)="closePrescriptionModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedPrescription.medication_name || 'Prescription' }}</h3>
+      <button class="close-btn" (click)="closePrescriptionModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="prescription-detail-info">
+        <div class="detail-row">
+          <span class="detail-label">Patient:</span>
+          <span>{{ selectedPrescription.patient_name || 'Unknown Patient' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Dosage:</span>
+          <span>{{ selectedPrescription.dosage }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Frequency:</span>
+          <span>{{ selectedPrescription.frequency }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Duration:</span>
+          <span>{{ selectedPrescription.duration }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status:</span>
+          <span class="prescription-status-badge" [ngClass]="getStatusClass(selectedPrescription.status)">
+            {{ selectedPrescription.status | titlecase }}
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Prescribed Date:</span>
+          <span>{{ formatDate(selectedPrescription.prescribed_date) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedPrescription.diagnosis">
+          <span class="detail-label">Diagnosis:</span>
+          <span>{{ selectedPrescription.diagnosis }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedPrescription.instructions">
+          <span class="detail-label">Instructions:</span>
+          <span>{{ selectedPrescription.instructions }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedPrescription.notes">
+          <span class="detail-label">Notes:</span>
+          <span>{{ selectedPrescription.notes }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button 
+          *ngIf="selectedPrescription.status === PrescriptionStatus.ACTIVE"
+          class="btn-primary" 
+          (click)="updateStatus(selectedPrescription, PrescriptionStatus.COMPLETED)">
+          Mark as Completed
+        </button>
+        <button 
+          *ngIf="selectedPrescription.status === PrescriptionStatus.ACTIVE"
+          class="btn-danger" 
+          (click)="updateStatus(selectedPrescription, PrescriptionStatus.CANCELLED)">
+          Cancel Prescription
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<app-profile-modal 
+  [isOpen]="showProfileModal" 
+  (close)="closeProfileModal()"
+  (profileUpdated)="onProfileUpdated()">
+</app-profile-modal>
