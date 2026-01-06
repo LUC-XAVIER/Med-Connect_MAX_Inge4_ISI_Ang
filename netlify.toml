@@ -1,6 +1,6 @@
 [build]
   base = "med-connect-WebFront"
-  publish = "dist/med-connect"
+  publish = "dist/med-connect/browser"
   command = "ng build --configuration production"
 
 [[redirects]]
