@@ -9,11 +9,14 @@ import { ConnectionWithDetails } from '../../models/connection.model';
 import { AuthService } from '../../services/auth.service';
 import { WebSocketService } from '../../services/websocket.service';
 import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../profile/profile-modal.component';
+import { ProfilePictureService } from '../../services/profile-picture.service';
+
 
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, ProfileModalComponent],
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.css']
 })
@@ -38,6 +41,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   // Connected users (for starting new conversations)
   connectedUsers: ConnectionWithDetails[] = [];
   showNewConversationModal = false;
+  showProfileModal = false;
   selectedUserForNewChat: ConnectionWithDetails | null = null;
 
   // Search
@@ -55,7 +59,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private connectionService: ConnectionService,
     private authService: AuthService,
     private websocketService: WebSocketService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -364,6 +369,31 @@ export class MessagesComponent implements OnInit, OnDestroy {
     if (messagesContainer) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
   }
 }
 

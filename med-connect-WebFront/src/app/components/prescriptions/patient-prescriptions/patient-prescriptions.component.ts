@@ -7,11 +7,14 @@ import { PrescriptionService, Prescription, PrescriptionStatus } from '../../../
 import { AuthService } from '../../../services/auth.service';
 import { MessageService } from '../../../services/message.service';
 import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
+
 
 @Component({
   selector: 'app-patient-prescriptions',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, ProfileModalComponent],
   templateUrl: './patient-prescriptions.component.html',
   styleUrls: ['./patient-prescriptions.component.css']
 })
@@ -25,6 +28,7 @@ export class PatientPrescriptionsComponent implements OnInit, OnDestroy {
 
   // Modal states
   showPrescriptionModal = false;
+  showProfileModal = false;
   selectedPrescription: Prescription | null = null;
 
   // Filter states
@@ -45,7 +49,8 @@ export class PatientPrescriptionsComponent implements OnInit, OnDestroy {
   constructor(
     private prescriptionService: PrescriptionService,
     private authService: AuthService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -144,6 +149,31 @@ export class PatientPrescriptionsComponent implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
   }
 }
 

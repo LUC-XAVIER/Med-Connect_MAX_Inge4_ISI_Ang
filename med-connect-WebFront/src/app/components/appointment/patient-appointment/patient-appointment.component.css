@@ -5,6 +5,13 @@
   background: #f5f7fa;
 }
 
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .dashboard-content {
   flex: 1;
   margin-left: 260px;

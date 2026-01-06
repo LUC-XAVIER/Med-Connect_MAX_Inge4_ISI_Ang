@@ -13,6 +13,13 @@
   color: #1a1a1a;
 }
 
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .doctors-grid {
   display: flex;
   flex-direction: column;

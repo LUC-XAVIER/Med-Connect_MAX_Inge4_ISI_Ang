@@ -9,11 +9,14 @@ import { ConnectionWithDetails } from '../../../models/connection.model';
 import { AuthService } from '../../../services/auth.service';
 import { MessageService } from '../../../services/message.service';
 import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
+
 
 @Component({
   selector: 'app-patient-rate-doctor',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, ProfileModalComponent],
   templateUrl: './patient-rate-doctor.component.html',
   styleUrls: ['./patient-rate-doctor.component.css']
 })
@@ -29,12 +32,16 @@ export class PatientRateDoctorComponent implements OnInit, OnDestroy {
   unreadCount: number = 0;
   private refreshSubscription?: Subscription;
 
+  //Modal states
+  showProfileModal = false;
+
   constructor(
     private ratingService: DoctorRatingService,
     private connectionService: ConnectionService,
     private authService: AuthService,
     private messageService: MessageService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -154,6 +161,31 @@ export class PatientRateDoctorComponent implements OnInit, OnDestroy {
 
   getDoctorDisplayName(doctor: ConnectionWithDetails): string {
     return `Dr. ${doctor.doctor_first_name} ${doctor.doctor_last_name}`;
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
   }
 }
 

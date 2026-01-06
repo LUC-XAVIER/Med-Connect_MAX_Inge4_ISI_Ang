@@ -16,6 +16,9 @@ import { MessageService } from '../../../services/message.service';
 import { AuthService } from '../../../services/auth.service';
 import { SidebarComponent } from '../../dashboard/sidebar/sidebar.component';
 import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
+
 
 @Component({
   selector: 'app-doc-connections',
@@ -31,7 +34,8 @@ import { interval, Subscription } from 'rxjs';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    SidebarComponent
+    SidebarComponent,
+    ProfileModalComponent
   ],
   templateUrl: './doc-connection.component.html',
   styleUrls: ['./doc-connection.component.css']
@@ -53,6 +57,7 @@ export class DocConnectionsComponent implements OnInit, OnDestroy {
 
   // Modal state
   showPatientDetailsModal = false;
+  showProfileModal = false;
   selectedConnection: ConnectionWithDetails | null = null;
 
   constructor(
@@ -60,7 +65,8 @@ export class DocConnectionsComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -266,5 +272,30 @@ export class DocConnectionsComponent implements OnInit, OnDestroy {
 
   refreshConnections(): void {
     this.loadAllConnections();
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
   }
 }

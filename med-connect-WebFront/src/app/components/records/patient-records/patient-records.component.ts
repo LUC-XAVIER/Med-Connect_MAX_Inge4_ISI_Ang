@@ -9,11 +9,13 @@ import { ConnectionWithDetails } from '../../../models/connection.model';
 import { AuthService } from '../../../services/auth.service';
 import { MessageService } from '../../../services/message.service';
 import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
 
 @Component({
   selector: 'app-patient-records',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, ProfileModalComponent],
   templateUrl: './patient-records.component.html',
   styleUrls: ['./patient-records.component.css']
 })
@@ -31,6 +33,7 @@ export class PatientRecordsComponent implements OnInit, OnDestroy {
   // Modal states
   showUploadModal = false;
   showRecordModal = false;
+  showProfileModal = false;
   showShareModal = false;
   selectedRecord: MedicalRecord | null = null;
   selectedConnection: ConnectionWithDetails | null = null;
@@ -70,7 +73,8 @@ export class PatientRecordsComponent implements OnInit, OnDestroy {
     private recordService: RecordService,
     private connectionService: ConnectionService,
     private authService: AuthService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -354,6 +358,31 @@ export class PatientRecordsComponent implements OnInit, OnDestroy {
   getRecordTypeLabel(type: string): string {
     const recordType = this.recordTypes.find(rt => rt.value === type);
     return recordType?.label || type;
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
   }
 }
 

@@ -8,13 +8,15 @@ import { DoctorService } from '../../../services/doctor.service';
 import { Doctor } from '../../../models/doctor.model';
 import { MessageService } from '../../../services/message.service';
 import { SidebarComponent } from '../../dashboard/sidebar/sidebar.component';
-import { ProfilePictureService } from '../../../services/profile-picture.service';
 import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
+
 
 @Component({
   selector: 'app-pat-connections',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, FormsModule],
+  imports: [CommonModule, SidebarComponent, FormsModule, ProfileModalComponent],
   templateUrl: './pat-connection.component.html',
   styleUrl: './pat-connection.component.css'
 })
@@ -44,6 +46,7 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
 
   // Modals
   showConnectionModal = false;
+  showProfileModal = false;
   selectedDoctor: Doctor | null = null;
 
   // Connection Request
@@ -323,5 +326,26 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
       }
     });
     return Array.from(specializations).sort();
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
   }
 }

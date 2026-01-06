@@ -14,6 +14,13 @@
   text-align: center;
 }
 
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .stat-value-large {
   font-size: 48px;
   font-weight: 700;

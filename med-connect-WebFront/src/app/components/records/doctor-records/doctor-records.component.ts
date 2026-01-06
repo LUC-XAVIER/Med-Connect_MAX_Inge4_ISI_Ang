@@ -9,11 +9,14 @@ import { ConnectionWithDetails } from '../../../models/connection.model';
 import { AuthService } from '../../../services/auth.service';
 import { MessageService } from '../../../services/message.service';
 import { interval, Subscription } from 'rxjs';
+import { ProfileModalComponent } from '../../profile/profile-modal.component';
+import { ProfilePictureService } from '../../../services/profile-picture.service';
+
 
 @Component({
   selector: 'app-doctor-records',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, ProfileModalComponent],
   templateUrl: './doctor-records.component.html',
   styleUrls: ['./doctor-records.component.css'],
   encapsulation: ViewEncapsulation.None
@@ -33,6 +36,7 @@ export class DoctorRecordsComponent implements OnInit, OnDestroy {
   isLoading = true;
   isLoadingRecords = false;
   showPatientModal = false;
+  showProfileModal = false;
   showRecordModal = false;
   selectedRecord: MedicalRecord | null = null;
   currentUser: any = null;
@@ -64,7 +68,8 @@ export class DoctorRecordsComponent implements OnInit, OnDestroy {
     private recordService: RecordService,
     private authService: AuthService,
     private messageService: MessageService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private profilePictureService: ProfilePictureService
   ) {}
 
   ngOnInit(): void {
@@ -250,5 +255,30 @@ export class DoctorRecordsComponent implements OnInit, OnDestroy {
     if (!date) return 'N/A';
     const d = new Date(date);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  openProfileModal(): void {
+    this.showProfileModal = true;
+  }
+
+  closeProfileModal(): void {
+    this.showProfileModal = false;
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  onProfileUpdated(): void {
+    // Reload user data
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+  }
+
+  getProfilePictureUrl(profilePicture: string | null | undefined): string {
+    return this.profilePictureService.getProfilePictureUrl(profilePicture);
   }
 }
