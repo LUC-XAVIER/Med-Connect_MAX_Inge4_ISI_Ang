@@ -64,53 +64,49 @@ export class AuthService {
   private loadStoredUser(): void {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
+    const expiration = localStorage.getItem('tokenExpiration');
 
     if (token && userStr) {
       try {
-        // Verify token is still valid
         const tokenData = this.parseJwt(token);
-        if (!tokenData) {
-          console.log('Invalid token format, clearing session');
-          this.clearSession();
+        const user = JSON.parse(userStr);
+
+        if (!user || !user.role) {
+          this.clearSession(false);
           return;
         }
 
-        // Check if token is expired
-        if (tokenData.exp) {
-          const isExpired = tokenData.exp * 1000 <= Date.now();
-          if (isExpired) {
-            console.log('Token expired, clearing session');
-            this.clearSession();
+        if (tokenData?.exp) {
+          const expiresIn = tokenData.exp * 1000 - Date.now();
+          if (expiresIn <= 0) {
+            this.clearSession(false);
             return;
           }
-        }
-
-        // Load user data
-        const user = JSON.parse(userStr);
-        if (!user || !user.role) {
-          console.log('Invalid user data, clearing session');
-          this.clearSession();
-          return;
+          this.setAutoLogout(expiresIn);
+          localStorage.setItem('tokenExpiration', new Date(Date.now() + expiresIn).toISOString());
+        } else if (expiration) {
+          const expiresIn = new Date(expiration).getTime() - Date.now();
+          if (expiresIn <= 0) {
+            this.clearSession(false);
+            return;
+          }
+          this.setAutoLogout(expiresIn);
         }
 
         this.currentUserSubject.next(user);
-
-        // Set up auto logout based on token expiration
-        if (tokenData.exp) {
-          const expiresIn = tokenData.exp * 1000 - Date.now();
+      } catch (error) {
+        if (expiration) {
+          const expiresIn = new Date(expiration).getTime() - Date.now();
           if (expiresIn > 0) {
+            this.currentUserSubject.next(JSON.parse(userStr));
             this.setAutoLogout(expiresIn);
-          } else {
-            this.clearSession();
+            return;
           }
         }
-      } catch (error) {
-        console.error('Error loading stored user:', error);
-        this.clearSession();
+        this.clearSession(false);
       }
     } else {
-      // No token or user data, ensure session is cleared
-      this.clearSession();
+      this.clearSession(false);
     }
   }
 
@@ -131,7 +127,7 @@ export class AuthService {
       if (expiresIn > 0) {
         this.setAutoLogout(expiresIn);
       } else {
-        this.clearSession();
+        this.clearSession(false);
       }
     }
   }
@@ -270,7 +266,7 @@ export class AuthService {
       }),
       catchError(error => {
         if (error.status === 401 || error.status === 403) {
-          this.clearSession();
+          this.clearSession(false);
         }
         return throwError(() => error);
       })
@@ -294,11 +290,11 @@ export class AuthService {
   logout(): Observable<any> {
     return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/logout`, {}).pipe(
       tap(() => {
-        this.clearSession();
+        this.clearSession(true);
       }),
       catchError(() => {
         // Even if the API call fails, clear local session
-        this.clearSession();
+        this.clearSession(true);
         return throwError(() => ({message: 'Logout failed but session cleared'}));
       })
     );
@@ -306,52 +302,65 @@ export class AuthService {
 
   // Manual logout (without API call)
   manualLogout(): void {
-    this.clearSession();
+    this.clearSession(true);
   }
 
   // Check if user is logged in
   isLoggedIn(): boolean {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No token found in localStorage');
       return false;
     }
 
-    // Check if token is expired
-    const tokenData = this.parseJwt(token);
-    if (tokenData && tokenData.exp) {
-      const isExpired = tokenData.exp * 1000 <= Date.now();
-      if (isExpired) {
-        console.log('Token is expired');
-        this.clearSession();
+    const expiration = localStorage.getItem('tokenExpiration');
+    if (expiration) {
+      const expiresAt = new Date(expiration).getTime();
+      if (expiresAt <= Date.now()) {
+        this.clearSession(false);
         return false;
       }
-      return true;
     }
 
-    console.log('Token data invalid or missing expiration');
-    return false;
+    const tokenData = this.parseJwt(token);
+    if (tokenData?.exp) {
+      const isExpired = tokenData.exp * 1000 <= Date.now();
+      if (isExpired) {
+        this.clearSession(false);
+        return false;
+      }
+    }
+
+    return true;
   }
 
-  // Check user role
   getUserRole(): string | null {
-    if (!this.isLoggedIn()) {
+    const token = localStorage.getItem('token');
+    if (!token) {
       return null;
     }
 
-    // First try to get from currentUserSubject
+    const expiration = localStorage.getItem('tokenExpiration');
+    if (expiration && new Date(expiration).getTime() <= Date.now()) {
+      this.clearSession(false);
+      return null;
+    }
+
     const user = this.currentUserSubject.value;
     if (user?.role) {
       return user.role;
     }
 
-    // Fallback to localStorage if subject is empty
-    const storedRole = localStorage.getItem('userRole');
-    if (storedRole) {
-      return storedRole;
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      if (parsedUser?.role) {
+        this.currentUserSubject.next(parsedUser);
+        return parsedUser.role;
+      }
     }
 
-    return null;
+    const storedRole = localStorage.getItem('userRole');
+    return storedRole || null;
   }
 
   // Get user ID
@@ -390,7 +399,7 @@ export class AuthService {
     this.currentUserSubject.next(authResponse.user);
   }
 
-  private clearSession(): void {
+  private clearSession(redirect: boolean = false): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');
@@ -403,7 +412,10 @@ export class AuthService {
     }
 
     this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
+
+    if (redirect) {
+      this.router.navigate(['/login']);
+    }
   }
 
   // Update user profile

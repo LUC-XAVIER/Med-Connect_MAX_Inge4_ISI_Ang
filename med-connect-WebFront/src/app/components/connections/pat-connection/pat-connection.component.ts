@@ -2,23 +2,20 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { interval, Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { ConnectionService } from '../../../services/connection.service';
-import { DoctorService } from '../../../services/doctor.service';
-import { Doctor } from '../../../models/doctor.model';
 import { MessageService } from '../../../services/message.service';
 import { SidebarComponent } from '../../dashboard/sidebar/sidebar.component';
-import { interval, Subscription } from 'rxjs';
 import { ProfileModalComponent } from '../../profile/profile-modal.component';
 import { ProfilePictureService } from '../../../services/profile-picture.service';
-
 
 @Component({
   selector: 'app-pat-connections',
   standalone: true,
   imports: [CommonModule, SidebarComponent, FormsModule, ProfileModalComponent],
   templateUrl: './pat-connection.component.html',
-  styleUrl: './pat-connection.component.css'
+  styleUrls: ['./pat-connection.component.css']
 })
 export class PatConnectionsComponent implements OnInit, OnDestroy {
   currentUser: any = null;
@@ -32,24 +29,14 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
     rejectedRequests: 0
   };
 
-  // Doctors & Connections
-  allDoctors: Doctor[] = [];
-  filteredDoctors: Doctor[] = [];
   myConnections: any[] = [];
-  isLoadingDoctors = false;
+  filteredConnections: any[] = [];
   isLoadingConnections = false;
+  connectionSearchQuery = '';
 
-  // Search & Filter
-  doctorSearchQuery = '';
-  selectedSpecialization = 'all';
-  selectedTab: 'find' | 'myConnections' = 'find';
-
-  // Modals
-  showConnectionModal = false;
   showProfileModal = false;
-  selectedDoctor: Doctor | null = null;
+  selectedDoctor: any = null;
 
-  // Connection Request
   isSubmittingConnection = false;
   connectionSuccess = '';
   connectionError = '';
@@ -57,9 +44,8 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private connectionService: ConnectionService,
-    private doctorService: DoctorService,
     private messageService: MessageService,
-    private router: Router,
+    public router: Router,
     private profilePictureService: ProfilePictureService
   ) {}
 
@@ -67,10 +53,8 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
-      console.log('Current user:', this.currentUser); // Debug log
     }
 
-    this.loadDoctors();
     this.loadMyConnections();
     this.loadUnreadCount();
     
@@ -97,41 +81,16 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Load all doctors - FILTER TO SHOW ONLY VERIFIED DOCTORS
-  loadDoctors(): void {
-    this.isLoadingDoctors = true;
-    this.doctorService.getAllDoctors().subscribe({
-      next: (doctors) => {
-        console.log('Loaded doctors:', doctors); // Debug log
-
-        // Filter to show only verified doctors to prevent connection requests to unverified doctors
-        this.allDoctors = Array.isArray(doctors)
-          ? doctors.filter(doctor => doctor.verified)
-          : [];
-
-        this.filteredDoctors = [...this.allDoctors];
-        this.stats.totalDoctors = this.allDoctors.length;
-        this.isLoadingDoctors = false;
-      },
-      error: (error) => {
-        console.error('Error loading doctors:', error);
-        this.allDoctors = [];
-        this.filteredDoctors = [];
-        this.isLoadingDoctors = false;
-      }
-    });
-  }
-
-  // Load my connections
   loadMyConnections(): void {
     this.isLoadingConnections = true;
     this.connectionService.getPatientConnections().subscribe({
       next: (connections) => {
         this.myConnections = connections;
-        // Update stats
         this.stats.connectedDoctors = connections.filter(c => c.status === 'approved').length;
         this.stats.pendingRequests = connections.filter(c => c.status === 'pending').length;
         this.stats.rejectedRequests = connections.filter(c => c.status === 'rejected').length;
+        this.stats.totalDoctors = this.stats.connectedDoctors;
+        this.applyConnectionFilter();
         this.isLoadingConnections = false;
       },
       error: (error) => {
@@ -141,67 +100,36 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Filter doctors by search query and specialization
-  filterDoctors(): void {
-    // If search query exists, use backend search with filters
-    if (this.doctorSearchQuery.trim() || this.selectedSpecialization !== 'all') {
-      this.isLoadingDoctors = true;
-      const searchParams: any = {};
-      
-      if (this.doctorSearchQuery.trim()) {
-        searchParams.q = this.doctorSearchQuery.trim();
-      }
-      
-      if (this.selectedSpecialization !== 'all') {
-        searchParams.specialty = this.selectedSpecialization;
-      }
-      
-      // Only show verified doctors
-      searchParams.verified = true;
-      
-      this.doctorService.searchDoctors(searchParams).subscribe({
-        next: (doctors) => {
-          this.filteredDoctors = doctors;
-          this.isLoadingDoctors = false;
-        },
-        error: (error) => {
-          console.error('Error searching doctors:', error);
-          this.filteredDoctors = [];
-          this.isLoadingDoctors = false;
-        }
-      });
-    } else {
-      // No filters, show all doctors
-      this.filteredDoctors = [...this.allDoctors];
+  applyConnectionFilter(): void {
+    const approved = this.myConnections.filter(c => c.status === 'approved');
+    if (!this.connectionSearchQuery.trim()) {
+      this.filteredConnections = approved;
+      return;
     }
+    const query = this.connectionSearchQuery.toLowerCase();
+    this.filteredConnections = approved.filter(c =>
+      `${c.doctor_first_name} ${c.doctor_last_name}`.toLowerCase().includes(query) ||
+      c.doctor_specialization?.toLowerCase().includes(query) ||
+      c.doctor_hospital?.toLowerCase().includes(query)
+    );
   }
 
-  // Filter by specialization
-  filterBySpecialization(specialization: string): void {
-    this.selectedSpecialization = specialization;
-    this.filterDoctors();
-  }
-
-  // Check if already connected to doctor
   isConnected(doctorUserId: number): boolean {
     return this.myConnections.some(c =>
       c.doctor_user_id === doctorUserId && c.status === 'approved'
     );
   }
 
-  // Check if connection is pending
   isPending(doctorUserId: number): boolean {
     return this.myConnections.some(c =>
       c.doctor_user_id === doctorUserId && c.status === 'pending'
     );
   }
 
-  // Get initials for avatar
   getInitials(firstName: string, lastName: string): string {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   }
 
-  // Get avatar color based on ID
   getAvatarColor(userId: number): string {
     const colors = [
       'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -216,81 +144,10 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
     return colors[userId % colors.length];
   }
 
-  // Open connection request modal
-  openConnectionModal(doctor: Doctor): void {
-    // Add check for doctor verification
-    if (!doctor.verified) {
-      alert('This doctor is not yet verified and cannot accept connection requests. Please choose a verified doctor.');
-      return;
-    }
-
-    if (this.isConnected(doctor.user_id)) {
-      alert('You are already connected with this doctor');
-      return;
-    }
-
-    if (this.isPending(doctor.user_id)) {
-      alert('Connection request is pending approval');
-      return;
-    }
-
-    this.selectedDoctor = doctor;
-    this.showConnectionModal = true;
-    this.connectionSuccess = '';
-    this.connectionError = '';
-  }
-
-  // Close connection modal
-  closeConnectionModal(): void {
-    this.showConnectionModal = false;
-    this.selectedDoctor = null;
-    this.connectionSuccess = '';
-    this.connectionError = '';
-  }
-
-  // Submit connection request
-  submitConnectionRequest(): void {
-    if (!this.selectedDoctor) return;
-
-    // Double-check verification before sending
-    if (!this.selectedDoctor.verified) {
-      this.connectionError = 'This doctor is not yet verified and cannot accept connection requests.';
-      return;
-    }
-
-    this.isSubmittingConnection = true;
-    this.connectionError = '';
-    this.connectionSuccess = '';
-
-    this.connectionService.requestConnection(this.selectedDoctor.user_id).subscribe({
-      next: () => {
-        this.connectionSuccess = 'Connection request sent successfully!';
-        this.isSubmittingConnection = false;
-
-        // Reload connections after 2 seconds and close modal
-        setTimeout(() => {
-          this.loadMyConnections();
-          this.closeConnectionModal();
-        }, 2000);
-      },
-      error: (err) => {
-        this.connectionError = err.error?.message || 'Failed to send connection request. Please try again.';
-        this.isSubmittingConnection = false;
-      }
-    });
-  }
-
-  // Switch tabs
-  switchTab(tab: 'find' | 'myConnections'): void {
-    this.selectedTab = tab;
-  }
-
-  // Get connection by doctor user ID
   getConnectionByDoctorId(doctorUserId: number): any {
     return this.myConnections.find(c => c.doctor_user_id === doctorUserId);
   }
 
-  // Cancel connection request (for pending requests)
   cancelConnectionRequest(connection: any): void {
     if (confirm('Are you sure you want to cancel this connection request?')) {
       this.connectionService.revokeConnection(connection.connection_id).subscribe({
@@ -314,18 +171,7 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
   }
 
   getProfilePictureUrl(profilePicture: string | null | undefined): string {
-    return this.profilePictureService.getProfilePictureUrl(profilePicture);
-  }
-
-  // Get all available specializations from loaded doctors
-  getAvailableSpecializations(): string[] {
-    const specializations = new Set<string>();
-    this.allDoctors.forEach(doctor => {
-      if (doctor.speciality) {
-        specializations.add(doctor.speciality);
-      }
-    });
-    return Array.from(specializations).sort();
+    return this.profilePictureService.getProfilePictureUrl(profilePicture || '');
   }
 
   openProfileModal(): void {
@@ -334,7 +180,6 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
 
   closeProfileModal(): void {
     this.showProfileModal = false;
-    // Reload user data
     const userStr = localStorage.getItem('user');
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
@@ -342,7 +187,6 @@ export class PatConnectionsComponent implements OnInit, OnDestroy {
   }
 
   onProfileUpdated(): void {
-    // Reload user data
     const userStr = localStorage.getItem('user');
     if (userStr) {
       this.currentUser = JSON.parse(userStr);

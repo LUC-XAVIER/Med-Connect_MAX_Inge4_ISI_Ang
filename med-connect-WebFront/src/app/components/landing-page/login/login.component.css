@@ -750,3 +750,19 @@ Or use your own local image:
 .doctor-login *:focus-visible {
   outline-color: #f97316;
 }
+
+/* Admin entry */
+.admin-entry {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.admin-link {
+  background: transparent;
+  border: 1px dashed #1d4ed8;
+  color: #1d4ed8;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}

@@ -52,12 +52,10 @@ export class AuthInterceptor implements HttpInterceptor {
           });
         }
 
-        // Handle 403 Forbidden errors
         if (error.status === 403) {
-          this.router.navigate(['/access-denied']);
+          return throwError(() => error);
         }
 
-        // Re-throw the error
         return throwError(() => error);
       })
     );

@@ -201,6 +201,23 @@ export class DoctorRepository {
 
     return rows[0].total;
   }
+
+  // Get top-rated doctors (admin dashboard)
+  async getTopRated(limit: number = 5): Promise<any[]> {
+    const query = `
+      SELECT 
+        u.user_id, u.first_name, u.last_name, u.email, u.profile_picture,
+        d.doctor_id, d.specialty, d.verified, d.rating, d.total_ratings
+      FROM doctors d
+      JOIN users u ON u.user_id = d.user_id
+      WHERE u.is_active = true AND d.rating IS NOT NULL
+      ORDER BY d.rating DESC, d.total_ratings DESC, u.last_name ASC
+      LIMIT ?
+    `;
+
+    const [rows] = await pool.query<RowDataPacket[]>(query, [limit]);
+    return rows;
+  }
 }
 
 export default new DoctorRepository();

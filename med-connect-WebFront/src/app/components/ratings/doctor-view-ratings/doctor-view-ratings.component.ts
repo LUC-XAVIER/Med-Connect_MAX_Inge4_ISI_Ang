@@ -89,7 +89,10 @@ export class DoctorViewRatingsComponent implements OnInit, OnDestroy {
   }
 
   getStarArray(rating: number): number[] {
-    return Array(5).fill(0).map((_, i) => i < rating ? 1 : 0);
+    // Ensure rating is a number and within valid range
+    const numRating = typeof rating === 'number' ? rating : parseInt(String(rating), 10);
+    const validRating = Math.max(0, Math.min(5, numRating || 0));
+    return Array(5).fill(0).map((_, i) => i < validRating ? 1 : 0);
   }
 
   getRoundedRating(rating: number): number {

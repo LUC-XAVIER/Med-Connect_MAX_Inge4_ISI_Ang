@@ -5,6 +5,8 @@ import { AuthService } from '../../../services/auth.service';
 import { ConnectionService } from '../../../services/connection.service';
 import { AppointmentService } from '../../../services/appointment.service';
 import { MessageService } from '../../../services/message.service';
+import { RecordService } from '../../../services/record.service';
+import { PrescriptionService } from '../../../services/prescription.service';
 import { AppointmentWithDetails, AppointmentStatus } from '../../../models/appointment.model';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { ProfileModalComponent } from '../../profile/profile-modal.component';
@@ -33,6 +35,7 @@ export class PatDashboardComponent implements OnInit, OnDestroy {
 
   recentAppointments: any[] = [];
   recentRecords: any[] = [];
+  healthActivities: any[] = [];
 
   showProfileModal = false;
 
@@ -41,6 +44,8 @@ export class PatDashboardComponent implements OnInit, OnDestroy {
     private connectionService: ConnectionService,
     private appointmentService: AppointmentService,
     private messageService: MessageService,
+    private recordService: RecordService,
+    private prescriptionService: PrescriptionService,
     private router: Router,
     private profilePictureService: ProfilePictureService
   ) {}
@@ -74,6 +79,8 @@ export class PatDashboardComponent implements OnInit, OnDestroy {
     this.loadDashboardData();
     this.loadConnectionStats();
     this.loadUnreadCount();
+    this.loadRecentRecords();
+    this.loadHealthActivities();
     
     this.refreshSubscription = interval(60000).subscribe(() => {
       this.loadUnreadCount();
@@ -125,8 +132,49 @@ export class PatDashboardComponent implements OnInit, OnDestroy {
       }
     });
 
-    // TODO: Load medical records when record service is available
-    this.recentRecords = [];
+    // Load medical records
+    this.loadRecentRecords();
+  }
+
+  loadRecentRecords(): void {
+    this.recordService.getMyRecords({ limit: 2 }).subscribe({
+      next: (records) => {
+        // Handle both array and paginated response
+        const recordsArray = Array.isArray(records) ? records : (records || []);
+        this.recentRecords = recordsArray
+          .sort((a: any, b: any) => {
+            const dateA = new Date(a.record_date || a.created_at).getTime();
+            const dateB = new Date(b.record_date || b.created_at).getTime();
+            return dateB - dateA;
+          })
+          .slice(0, 2);
+      },
+      error: (error) => {
+        console.error('Error loading recent records:', error);
+        this.recentRecords = [];
+      }
+    });
+  }
+
+  loadHealthActivities(): void {
+    // Load recent prescriptions as health activities
+    this.prescriptionService.getMyPrescriptions().subscribe({
+      next: (prescriptions) => {
+        const activities = prescriptions.slice(0, 5).map((pres: any) => ({
+          type: 'prescription',
+          title: `New Prescription from ${pres.doctor_name || 'Doctor'}`,
+          description: `${pres.medications?.length || 0} medication(s) prescribed`,
+          date: pres.created_at || pres.prescription_date
+        }));
+        this.healthActivities = activities.sort((a: any, b: any) => {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+      },
+      error: (error) => {
+        console.error('Error loading health activities:', error);
+        this.healthActivities = [];
+      }
+    });
   }
 
   // Load connection statistics
@@ -147,14 +195,24 @@ export class PatDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/patient/connections']);
   }
 
-  // Navigate to find doctors (connections page with find tab active)
-  navigateToFindDoctors(): void {
-    this.router.navigate(['/patient/connections']);
+  // Navigate to search doctors page
+  navigateToSearchDoctors(): void {
+    this.router.navigate(['/patient/doctors']);
+  }
+
+  // Navigate to appointments page
+  navigateToAppointments(): void {
+    this.router.navigate(['/patient/appointments']);
   }
 
   // Navigate to records page
   navigateToRecords(): void {
     this.router.navigate(['/patient/records']);
+  }
+
+  // Navigate to messages page
+  navigateToMessages(): void {
+    this.router.navigate(['/patient/messages']);
   }
 
   getGreeting(): string {

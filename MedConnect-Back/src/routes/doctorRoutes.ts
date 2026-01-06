@@ -23,5 +23,7 @@ router.delete('/profile', authenticate, isDoctor, doctorController.deleteProfile
 
 // Admin routes
 router.put('/:doctorId/verify', authenticate, isAdmin, doctorController.verifyDoctor);
+router.get('/admin/stats', authenticate, isAdmin, doctorController.getAdminStats);
+router.get('/top-rated', authenticate, isAdmin, doctorController.getTopRated);
 
 export default router;

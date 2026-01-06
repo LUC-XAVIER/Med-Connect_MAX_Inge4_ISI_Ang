@@ -164,7 +164,7 @@
             </div>
             <div class="card-content">
               <div class="actions-grid">
-                <button class="action-btn">
+                <button class="action-btn" (click)="navigateToAppointments()">
                   <div class="action-icon" style="background: rgba(255, 89, 0, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="#FF5900" stroke-width="2"/>
@@ -172,7 +172,7 @@
                   </div>
                   <span>Book Appointment</span>
                 </button>
-                <button class="action-btn">
+                <button class="action-btn" (click)="navigateToRecords()">
                   <div class="action-icon" style="background: rgba(6, 203, 191, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#06CBBF" stroke-width="2"/>
@@ -181,7 +181,7 @@
                   </div>
                   <span>Upload Records</span>
                 </button>
-                <button class="action-btn" (click)="navigateToFindDoctors()">
+                <button class="action-btn" (click)="navigateToSearchDoctors()">
                   <div class="action-icon" style="background: rgba(5, 81, 168, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#0551A8" stroke-width="2"/>
@@ -192,7 +192,7 @@
                   </div>
                   <span>Find Doctors</span>
                 </button>
-                <button class="action-btn">
+                <button class="action-btn" (click)="navigateToMessages()">
                   <div class="action-icon" style="background: rgba(158, 203, 255, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#9ECBFF" stroke-width="2"/>
@@ -214,11 +214,25 @@
               <button class="view-all-btn" (click)="navigateToRecords()">View All</button>
             </div>
             <div class="card-content">
-              <div class="empty-state">
+              <div *ngIf="recentRecords.length === 0" class="empty-state">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#9ECBFF" stroke-width="2"/>
                 </svg>
                 <p>No records uploaded yet</p>
+              </div>
+              <div *ngIf="recentRecords.length > 0" class="records-list">
+                <div *ngFor="let record of recentRecords" class="record-item" (click)="navigateToRecords()">
+                  <div class="record-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                      <path d="M14 2v6h6M16 13H8m8 4H8" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="record-info">
+                    <h4>{{ record.title || 'Untitled Record' }}</h4>
+                    <p>{{ record.record_type | titlecase }} • {{ formatDate(record.record_date || record.created_at) }}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -233,8 +247,29 @@
               </select>
             </div>
             <div class="card-content">
-              <div class="chart-placeholder">
-                <p>Chart will be displayed here</p>
+              <div *ngIf="healthActivities.length === 0" class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#9ECBFF" stroke-width="2"/>
+                </svg>
+                <p>No recent health activity</p>
+              </div>
+              <div *ngIf="healthActivities.length > 0" class="activity-list">
+                <div *ngFor="let activity of healthActivities" class="activity-item">
+                  <div class="activity-icon" [ngClass]="'activity-' + activity.type">
+                    <svg *ngIf="activity.type === 'prescription'" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                      <path d="M14 2v6h6M16 13H8m8 4H8" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <svg *ngIf="activity.type === 'appointment'" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="activity-info">
+                    <h4>{{ activity.title }}</h4>
+                    <p>{{ activity.description }}</p>
+                    <span class="activity-date">{{ formatDate(activity.date) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

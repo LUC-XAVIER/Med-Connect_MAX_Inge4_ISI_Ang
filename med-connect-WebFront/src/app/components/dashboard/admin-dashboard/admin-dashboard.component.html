@@ -1,1 +1,82 @@
-<p>admin-dashboard works!</p>
+<div class="admin-root">
+  <header class="admin-header">
+    <div>
+      <h1>Admin Control Center</h1>
+      <p>Manage doctor approvals and monitor platform stats</p>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="cards">
+      <div class="card gradient-blue">
+        <p class="label">Total Doctors</p>
+        <h2>{{ stats?.totalDoctors ?? '–' }}</h2>
+      </div>
+      <div class="card gradient-green">
+        <p class="label">Verified Doctors</p>
+        <h2>{{ stats?.verifiedDoctors ?? '–' }}</h2>
+      </div>
+      <div class="card gradient-orange">
+        <p class="label">Unverified Doctors</p>
+        <h2>{{ stats?.unverifiedDoctors ?? '–' }}</h2>
+      </div>
+      <div class="card gradient-purple">
+        <p class="label">Total Patients</p>
+        <h2>{{ stats?.totalPatients ?? '–' }}</h2>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Top Rated Doctors</h3>
+        <span class="muted">Based on average rating</span>
+      </div>
+      <div class="panel-body">
+        <div *ngIf="topRatedDoctors.length === 0" class="empty">No ratings yet.</div>
+        <div class="list">
+          <div class="list-item" *ngFor="let doc of topRatedDoctors">
+            <div class="avatar" [style.background]=" '#1f2937' ">
+              {{ doc.first_name[0] }}{{ doc.last_name[0] }}
+            </div>
+            <div class="info">
+              <div class="name">Dr. {{ doc.first_name }} {{ doc.last_name }}</div>
+              <div class="meta">{{ doc.speciality }} • {{ doc.email }}</div>
+            </div>
+            <div class="rating">
+              ⭐ {{ doc.rating || 0 | number:'1.1-1' }}
+              <span class="muted">({{ doc.total_ratings || 0 }})</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h3>Pending Doctor Verifications</h3>
+        <span class="muted">Approve newly registered doctors</span>
+      </div>
+      <div class="panel-body">
+        <div *ngIf="isLoadingDoctors" class="empty">Loading doctors...</div>
+        <div *ngIf="!isLoadingDoctors && unverifiedDoctors.length === 0" class="empty">
+          No pending verifications.
+        </div>
+        <div class="list">
+          <div class="list-item" *ngFor="let doc of unverifiedDoctors">
+            <div class="avatar" [style.background]=" '#111827' ">
+              {{ doc.first_name[0] }}{{ doc.last_name[0] }}
+            </div>
+            <div class="info">
+              <div class="name">Dr. {{ doc.first_name }} {{ doc.last_name }}</div>
+              <div class="meta">{{ doc.speciality }} • {{ doc.email }}</div>
+              <div class="meta muted">License: {{ doc.license_number }}</div>
+            </div>
+            <button class="btn" [disabled]="verifyInProgress[doc.doctor_id]" (click)="verifyDoctor(doc)">
+              {{ verifyInProgress[doc.doctor_id] ? 'Verifying...' : 'Verify' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

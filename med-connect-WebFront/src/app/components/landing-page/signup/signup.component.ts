@@ -53,6 +53,9 @@ export class SignupComponent implements OnInit, OnDestroy {
     agreeToTerms: false
   };
 
+  successAlert = '';
+  infoAlert = '';
+
   // Medical specialties for doctor dropdown
   specialties = [
     'General Practitioner',
@@ -267,8 +270,9 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.successAlert = '';
+    this.infoAlert = '';
 
-    // Prepare patient registration data
     const patientData: PatientRegisterData = {
       first_name: this.patientForm.firstName,
       last_name: this.patientForm.lastName,
@@ -281,26 +285,17 @@ export class SignupComponent implements OnInit, OnDestroy {
       bloodtype: this.patientForm.bloodtype || undefined
     };
 
-    console.log('Calling authService.registerPatient with data:', patientData);
-
     this.authService.registerPatient(patientData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          console.log('Patient registration successful:', response);
-
+        next: () => {
           this.successMessage = 'Registration successful! Your account has been created.';
-
-          // Store email for auto-fill
+          this.successAlert = this.successMessage;
           localStorage.setItem('rememberedEmail', this.patientForm.email);
-
-          // Auto-login after successful registration
           this.autoLoginAfterRegistration(this.patientForm.email, this.patientForm.password);
         },
         error: (error) => {
-          console.error('Registration error:', error);
-          // Extract error message from backend response
-          let errorMsg = 'Registration failed. Please try again.';
+          let errorMsg = 'Registration failed. Please check inputs and try again.';
           if (error.error) {
             if (error.error.error) {
               errorMsg = error.error.error;
@@ -336,8 +331,9 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.successAlert = '';
+    this.infoAlert = '';
 
-    // Prepare doctor registration data
     const doctorData: DoctorRegisterData = {
       first_name: this.doctorForm.firstName,
       last_name: this.doctorForm.lastName,
@@ -351,26 +347,18 @@ export class SignupComponent implements OnInit, OnDestroy {
       bio: this.doctorForm.bio || undefined
     };
 
-    console.log('Calling authService.registerDoctor with data:', doctorData);
-
     this.authService.registerDoctor(doctorData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          console.log('Doctor registration successful:', response);
-
+        next: () => {
           this.successMessage = 'Registration successful! Your account is pending verification. You will receive an email once verified.';
-
-          // Store email for auto-fill
+          this.successAlert = this.successMessage;
+          this.infoAlert = 'Admin must verify you for better experience.';
           localStorage.setItem('rememberedEmail', this.doctorForm.email);
-
-          // Auto-login after successful registration
           this.autoLoginAfterRegistration(this.doctorForm.email, this.doctorForm.password);
         },
         error: (error) => {
-          console.error('Registration error:', error);
-          // Extract error message from backend response
-          let errorMsg = 'Registration failed. Please try again.';
+          let errorMsg = 'Registration failed. Please check inputs and try again.';
           if (error.error) {
             if (error.error.error) {
               errorMsg = error.error.error;
@@ -392,19 +380,15 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.authService.login(email, password)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          console.log('Auto-login after registration successful:', response);
-
-          // Redirect to appropriate dashboard after short delay
+        next: () => {
           setTimeout(() => {
             this.redirectBasedOnRole();
-          }, 2000);
+          }, 500);
         },
         error: (error) => {
-          console.error('Auto-login error:', error);
-          // Even if auto-login fails, registration was successful
           this.isLoading = false;
-          // Redirect to login page
+          const message = error?.message || 'Login failed after registration. Please sign in.';
+          this.infoAlert = message;
           this.router.navigate(['/login'], {
             queryParams: {
               role: this.selectedRole,

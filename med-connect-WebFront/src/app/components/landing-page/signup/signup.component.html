@@ -38,9 +38,11 @@
           <p class="form-subtitle">Fill in your details to get started</p>
         </div>
 
+        <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="alert alert-success" *ngIf="successAlert">{{ successAlert }}</div>
+        <div class="alert alert-info" *ngIf="infoAlert">{{ infoAlert }}</div>
+
         <form (ngSubmit)="signupAsPatient()" class="signup-form-fields">
-          <!-- Full Name -->
-          <!-- First Name -->
           <div class="form-group">
             <label class="form-label">First Name</label>
             <div class="input-wrapper">
@@ -288,6 +290,10 @@
           <h2 class="form-title">Create Doctor Account</h2>
           <p class="form-subtitle">Join our network of healthcare professionals</p>
         </div>
+
+        <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="alert alert-success" *ngIf="successAlert">{{ successAlert }}</div>
+        <div class="alert alert-info" *ngIf="infoAlert">{{ infoAlert }}</div>
 
         <form (ngSubmit)="signupAsDoctor()" class="signup-form-fields">
           <!-- Full Name -->

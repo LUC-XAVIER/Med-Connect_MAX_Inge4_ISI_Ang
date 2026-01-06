@@ -13,7 +13,9 @@ export interface Doctor {
   verified: boolean;
   hospital_affiliation?: string;
   profile_picture_url?: string;
-  average_rating?: number;
+  profile_picture?: string;
+  rating?: number;
   total_ratings?: number;
+  average_rating?: number;
   created_at: string;
 }

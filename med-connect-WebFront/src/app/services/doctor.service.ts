@@ -44,7 +44,7 @@ export class DoctorService {
    */
   searchDoctors(params: {
     q?: string;
-    specialty?: string;
+    speciality?: string;
     verified?: boolean;
     hospital?: string;
     limit?: number;
@@ -54,8 +54,8 @@ export class DoctorService {
     if (params.q) {
       httpParams = httpParams.set('q', params.q);
     }
-    if (params.specialty) {
-      httpParams = httpParams.set('specialty', params.specialty);
+    if (params.speciality) {
+      httpParams = httpParams.set('speciality', params.speciality);
     }
     if (params.verified !== undefined) {
       httpParams = httpParams.set('verified', params.verified.toString());
@@ -85,6 +85,24 @@ export class DoctorService {
   updateProfile(updates: Partial<Doctor>): Observable<Doctor> {
     return this.http.put<ApiResponse<Doctor>>(`${this.apiUrl}/profile`, updates)
       .pipe(map(response => response.data));
+  }
+
+  // Admin: verify doctor
+  verifyDoctor(doctorId: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${doctorId}/verify`, {});
+  }
+
+  // Admin: stats
+  getAdminStats(): Observable<{ totalDoctors: number; verifiedDoctors: number; unverifiedDoctors: number; totalPatients: number }> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/admin/stats`)
+      .pipe(map(res => res.data));
+  }
+
+  // Admin: top rated doctors
+  getTopRatedDoctors(limit: number = 5): Observable<Doctor[]> {
+    return this.http.get<ApiResponse<Doctor[]>>(`${this.apiUrl}/top-rated`, {
+      params: new HttpParams().set('limit', limit)
+    }).pipe(map(res => res.data || []));
   }
 
   /**

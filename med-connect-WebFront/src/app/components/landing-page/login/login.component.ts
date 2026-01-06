@@ -15,7 +15,7 @@ import { AuthService } from '../../../services/auth.service';
 export class LoginComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  selectedRole: 'patient' | 'doctor' | null = null;
+  selectedRole: 'patient' | 'doctor' | 'admin' | null = null;
   showPassword = false;
   isLoading = false;
   errorMessage = '';
@@ -34,6 +34,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     rememberMe: false
   };
 
+  adminForm = {
+    email: '',
+    password: '',
+    rememberMe: false
+  };
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -41,13 +47,18 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    const presetRole = this.route.snapshot.data['role'];
+    if (presetRole === 'admin') {
+      this.selectedRole = 'admin';
+    }
+
     // Get return URL from route parameters or default to '/'
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
         this.returnUrl = params['returnUrl'] || '/';
 
-        if (params['role'] === 'patient' || params['role'] === 'doctor') {
+        if (params['role'] === 'patient' || params['role'] === 'doctor' || params['role'] === 'admin') {
           this.selectedRole = params['role'];
         }
       });
@@ -59,7 +70,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   // Role selection
-  selectRole(role: 'patient' | 'doctor') {
+  selectRole(role: 'patient' | 'doctor' | 'admin') {
     this.selectedRole = role;
     this.errorMessage = '';
   }
@@ -82,6 +93,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.showPassword = false;
     this.errorMessage = '';
     this.isLoading = false;
+    this.adminForm = { email: '', password: '', rememberMe: false };
   }
 
   // Patient login
@@ -202,6 +214,48 @@ export class LoginComponent implements OnInit, OnDestroy {
             errorMsg = error.message;
           }
 
+          this.errorMessage = errorMsg;
+          this.isLoading = false;
+        }
+      });
+  }
+
+  // Admin login
+  loginAsAdmin() {
+    if (!this.validateForm(this.adminForm)) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.authService.login(this.adminForm.email, this.adminForm.password)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response?.user?.role !== 'admin') {
+            this.errorMessage = 'This account is not an admin.';
+            this.authService.manualLogout();
+            this.isLoading = false;
+            return;
+          }
+          if (this.adminForm.rememberMe) {
+            localStorage.setItem('rememberedEmail', this.adminForm.email);
+          } else {
+            localStorage.removeItem('rememberedEmail');
+          }
+          this.handleSuccessfulLogin();
+        },
+        error: (error) => {
+          console.error('Admin login error:', error);
+          let errorMsg = 'Login failed. Please try again.';
+          if (error.error?.error) {
+            errorMsg = error.error.error;
+          } else if (error.error?.message) {
+            errorMsg = error.error.message;
+          } else if (error.message) {
+            errorMsg = error.message;
+          }
           this.errorMessage = errorMsg;
           this.isLoading = false;
         }

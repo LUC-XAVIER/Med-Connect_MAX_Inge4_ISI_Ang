@@ -120,38 +120,13 @@
 
     <!-- Main Content -->
     <div class="main-content-section">
-      <!-- Tab Navigation -->
-      <div class="tabs-navigation">
-        <button
-          class="tab-btn"
-          [class.active]="selectedTab === 'find'"
-          (click)="switchTab('find')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          Find Doctors
-        </button>
-        <button
-          class="tab-btn"
-          [class.active]="selectedTab === 'myConnections'"
-          (click)="switchTab('myConnections')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
-            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          My Connections ({{ myConnections.length }})
-        </button>
-      </div>
-
-      <!-- Find Doctors Tab -->
-      <div *ngIf="selectedTab === 'find'" class="tab-content">
+      <div class="tab-content">
         <div class="glass-card">
           <div class="card-header">
-            <h2>Available Doctors</h2>
+            <h2>My Connected Doctors</h2>
+            <span class="connection-count-badge">{{ filteredConnections.length }}</span>
           </div>
           <div class="card-content">
-            <!-- Search Bar -->
             <div class="search-doctors-bar">
               <svg class="search-icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
@@ -160,148 +135,29 @@
               <input
                 type="text"
                 class="search-doctors-input"
-                placeholder="Search doctors by name or specialization..."
-                [(ngModel)]="doctorSearchQuery"
-                (input)="filterDoctors()" />
+                placeholder="Search connected doctors by name, specialization, or hospital..."
+                [(ngModel)]="connectionSearchQuery"
+                (input)="applyConnectionFilter()" />
             </div>
 
-            <!-- Filters -->
-            <div class="doctor-filters">
-              <button
-                class="filter-chip"
-                [class.active]="selectedSpecialization === 'all'"
-                (click)="filterBySpecialization('all')">
-                All
-              </button>
-              <button
-                *ngFor="let spec of getAvailableSpecializations()"
-                class="filter-chip"
-                [class.active]="selectedSpecialization === spec"
-                (click)="filterBySpecialization(spec)">
-                {{ spec }}
-              </button>
-            </div>
-
-            <!-- Loading State -->
-            <div *ngIf="isLoadingDoctors" class="loading-state-inline">
-              <div class="spinner-small"></div>
-              <p>Loading doctors...</p>
-            </div>
-
-            <!-- Empty State -->
-            <div *ngIf="!isLoadingDoctors && filteredDoctors.length === 0" class="empty-state-inline">
-              <p>No doctors found matching your criteria</p>
-            </div>
-
-            <!-- Doctors Grid -->
-            <div *ngIf="!isLoadingDoctors && filteredDoctors.length > 0" class="doctors-grid-large">
-              <div *ngFor="let doctor of filteredDoctors" class="doctor-card-large">
-                <div class="doctor-card-header-large">
-                  <div class="doctor-avatar-large" [style.background]="getAvatarColor(doctor.user_id)">
-                    <img *ngIf="doctor.profile_picture_url" 
-                      [src]="getProfilePictureUrl(doctor.profile_picture_url)" 
-                      [alt]="doctor.first_name + ' ' + doctor.last_name"
-                      onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                    <span *ngIf="!doctor.profile_picture_url">
-                      {{ getInitials(doctor.first_name, doctor.last_name) }}
-                    </span>
-                  </div>
-                  <div class="doctor-verified-badge" *ngIf="doctor.verified">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
-                      <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    Verified
-                  </div>
-                  <div class="doctor-not-verified-badge" *ngIf="!doctor.verified">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                      <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
-                      <circle cx="12" cy="16" r="1" fill="currentColor"/>
-                    </svg>
-                    Not Verified
-                  </div>
-                </div>
-
-                <div class="doctor-card-body-large">
-                  <h3>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h3>
-                  <p class="specialization-large">{{ doctor.speciality }}</p>
-
-                  <div class="doctor-stats-large">
-                    <div class="stat-item-large" *ngIf="doctor.average_rating">
-                      <span class="stat-icon">⭐</span>
-                      <span>{{ doctor.average_rating | number:'1.1-1' }} Rating</span>
-                    </div>
-                    <div class="stat-item-large" *ngIf="doctor.years_of_experience">
-                      <span class="stat-icon">📅</span>
-                      <span>{{ doctor.years_of_experience }} Years</span>
-                    </div>
-                    <div class="stat-item-large" *ngIf="doctor.consultation_fee">
-                      <span class="stat-icon">💰</span>
-                      <span>${{ doctor.consultation_fee }}</span>
-                    </div>
-                  </div>
-
-                  <p class="doctor-bio-large" *ngIf="doctor.bio">{{ doctor.bio }}</p>
-                </div>
-
-                <div class="doctor-card-footer-large">
-                  <button
-                    class="btn-connect-large"
-                    [disabled]="isConnected(doctor.user_id) || isPending(doctor.user_id) || !doctor.verified"
-                    [ngClass]="{
-                      'connected': isConnected(doctor.user_id),
-                      'pending': isPending(doctor.user_id),
-                      'disabled': !doctor.verified
-                    }"
-                    (click)="openConnectionModal(doctor)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
-                      <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
-                      <line x1="20" y1="8" x2="20" y2="14" stroke="currentColor" stroke-width="2"/>
-                      <line x1="23" y1="11" x2="17" y2="11" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <span *ngIf="!isConnected(doctor.user_id) && !isPending(doctor.user_id) && doctor.verified">Request Connection</span>
-                    <span *ngIf="isPending(doctor.user_id)">⏳ Pending Approval</span>
-                    <span *ngIf="isConnected(doctor.user_id)">✓ Connected</span>
-                    <span *ngIf="!doctor.verified">Not Verified</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- My Connections Tab -->
-      <div *ngIf="selectedTab === 'myConnections'" class="tab-content">
-        <div class="glass-card">
-          <div class="card-header">
-            <h2>My Connections</h2>
-            <span class="connection-count-badge">{{ myConnections.length }}</span>
-          </div>
-          <div class="card-content">
-            <!-- Loading State -->
             <div *ngIf="isLoadingConnections" class="loading-state-inline">
               <div class="spinner-small"></div>
               <p>Loading connections...</p>
             </div>
 
-            <!-- Empty State -->
-            <div *ngIf="!isLoadingConnections && myConnections.length === 0" class="empty-state-inline">
+            <div *ngIf="!isLoadingConnections && filteredConnections.length === 0" class="empty-state-inline">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#9ECBFF" stroke-width="2"/>
                 <circle cx="9" cy="7" r="4" stroke="#9ECBFF" stroke-width="2"/>
               </svg>
-              <p>No connections yet</p>
-              <button class="btn-primary-cta-small" (click)="switchTab('find')">
+              <p>No connected doctors found</p>
+              <button class="btn-primary-cta-small" (click)="router.navigate(['/patient/doctors'])">
                 Find Doctors
               </button>
             </div>
 
-            <!-- Connections List -->
-            <div *ngIf="!isLoadingConnections && myConnections.length > 0" class="connections-full-list">
-              <div *ngFor="let connection of myConnections" class="connection-full-card">
+            <div *ngIf="!isLoadingConnections && filteredConnections.length > 0" class="connections-full-list">
+              <div *ngFor="let connection of filteredConnections" class="connection-full-card">
                 <div class="connection-card-left">
                   <div class="connection-avatar" [style.background]="getAvatarColor(connection.doctor_user_id)">
                     <img *ngIf="connection.doctor_profile_picture" 
@@ -317,24 +173,23 @@
                     <p class="specialization">{{ connection.doctor_specialization }}</p>
                     <div class="connection-meta">
                       <span *ngIf="connection.doctor_hospital">🏥 {{ connection.doctor_hospital }}</span>
-                      <span *ngIf="connection.doctor_verified" class="verified-badge">
+                      <span class="verified-badge">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
                           <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
                         </svg>
-                        Verified
+                        Connected
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div class="connection-card-right">
-                  <div class="connection-status-badge" [ngClass]="'status-' + connection.status">
-                    {{ connection.status | titlecase }}
+                  <div class="connection-status-badge status-approved">
+                    Connected
                   </div>
                   <div class="connection-actions">
                     <button
-                      *ngIf="connection.status === 'approved'"
                       class="btn-action-small btn-message"
                       title="Send Message"
                       (click)="navigateToMessages(connection.doctor_user_id)">
@@ -343,7 +198,6 @@
                       </svg>
                     </button>
                     <button
-                      *ngIf="connection.status === 'approved'"
                       class="btn-action-small btn-appointment"
                       title="Book Appointment"
                       (click)="navigateToAppointments(connection.doctor_user_id)">
@@ -352,10 +206,9 @@
                       </svg>
                     </button>
                     <button
-                      *ngIf="connection.status === 'pending'"
                       class="btn-action-small btn-cancel"
-                      (click)="cancelConnectionRequest(connection)"
-                      title="Cancel Request">
+                      title="Remove Connection"
+                      (click)="cancelConnectionRequest(connection)">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
                         <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
@@ -370,96 +223,6 @@
       </div>
     </div>
 
-    <!-- CONNECTION REQUEST MODAL -->
-    <div *ngIf="showConnectionModal" class="modal-overlay" (click)="closeConnectionModal()">
-      <div class="modal-dialog" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Request Connection</h3>
-          <button class="close-btn" (click)="closeConnectionModal()">×</button>
-        </div>
-
-        <div class="modal-body" *ngIf="selectedDoctor">
-          <!-- Success Message -->
-          <div *ngIf="connectionSuccess" class="alert alert-success">
-            {{ connectionSuccess }}
-          </div>
-
-          <!-- Error Message -->
-          <div *ngIf="connectionError" class="alert alert-error">
-            {{ connectionError }}
-          </div>
-
-          <!-- Doctor Info -->
-          <div class="connection-request-info">
-            <div class="doctor-avatar-modal" [style.background]="getAvatarColor(selectedDoctor.user_id)">
-              {{ getInitials(selectedDoctor.first_name, selectedDoctor.last_name) }}
-            </div>
-            <div class="doctor-info-modal">
-              <h4>Dr. {{ selectedDoctor.first_name }} {{ selectedDoctor.last_name }}</h4>
-              <p class="specialization">{{ selectedDoctor.speciality }}</p>
-              <div class="doctor-meta-modal">
-                <span *ngIf="selectedDoctor.average_rating">⭐ {{ selectedDoctor.average_rating | number:'1.1-1' }}</span>
-                <span *ngIf="selectedDoctor.years_of_experience">{{ selectedDoctor.years_of_experience }} years experience</span>
-                <span *ngIf="!selectedDoctor.verified" class="not-verified-badge">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                    <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
-                    <circle cx="12" cy="16" r="1" fill="currentColor"/>
-                  </svg>
-                  Not Verified
-                </span>
-                <span *ngIf="selectedDoctor.verified" class="verified-badge">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
-                    <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                  Verified
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Warning for unverified doctors -->
-          <div *ngIf="!selectedDoctor.verified" class="info-box warning">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-              <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="16" r="1" fill="currentColor"/>
-            </svg>
-            <p><strong>This doctor is not yet verified.</strong> They cannot accept connection requests until they complete the verification process.</p>
-          </div>
-
-          <div *ngIf="selectedDoctor.verified" class="info-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-              <line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="8" r="0.5" fill="currentColor"/>
-            </svg>
-            <p>Once connected, you can:</p>
-            <ul>
-              <li>Share medical records</li>
-              <li>Book appointments</li>
-              <li>Message directly</li>
-              <li>Receive prescriptions</li>
-            </ul>
-          </div>
-
-          <div class="modal-actions">
-            <button class="btn btn-secondary" (click)="closeConnectionModal()">
-              Cancel
-            </button>
-            <button
-              class="btn btn-primary"
-              [disabled]="isSubmittingConnection || !selectedDoctor.verified"
-              (click)="submitConnectionRequest()">
-              <span *ngIf="isSubmittingConnection">Sending Request...</span>
-              <span *ngIf="!isSubmittingConnection && selectedDoctor.verified">Send Connection Request</span>
-              <span *ngIf="!isSubmittingConnection && !selectedDoctor.verified">Doctor Not Verified</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </main>
 </div>
 

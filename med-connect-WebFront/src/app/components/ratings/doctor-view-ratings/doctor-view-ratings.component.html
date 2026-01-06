@@ -87,9 +87,12 @@
                 </div>
               </div>
               <div class="rating-stars-display">
-                <svg *ngFor="let i of getStarArray(rating.rating)" width="20" height="20" viewBox="0 0 24 24" fill="#FFD700">
+                <svg *ngFor="let i of [1,2,3,4,5]; let idx = index" 
+                     width="20" height="20" viewBox="0 0 24 24" 
+                     [attr.fill]="idx < (rating.rating || 0) ? '#FFD700' : '#E5E7EB'">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
+                <span class="rating-value-text">{{ rating.rating || 0 }}/5</span>
               </div>
             </div>
             <div *ngIf="rating.review" class="rating-review">

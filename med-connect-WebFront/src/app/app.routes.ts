@@ -20,11 +20,17 @@ import { DoctorPrescriptionsComponent } from "./components/prescriptions/doctor-
 import { MessagesComponent } from "./components/messages/messages.component";
 import { PatientRateDoctorComponent } from "./components/ratings/patient-rate-doctor/patient-rate-doctor.component";
 import { DoctorViewRatingsComponent } from "./components/ratings/doctor-view-ratings/doctor-view-ratings.component";
+import { ForgotPasswordComponent } from "./components/landing-page/forgot-password/forgot-password.component";
+import { ResetPasswordComponent } from "./components/landing-page/reset-password/reset-password.component";
+import { SearchDoctorsComponent } from "./components/doctors/search-doctors/search-doctors.component";
 
 export const routes: Routes = [
   { path: '', component: LandingPageComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'admin/login', component: LoginComponent, data: { role: 'admin' } },
   { path: 'signup', component: SignupComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
 
   // Doctor routes
   {
@@ -97,6 +103,11 @@ export const routes: Routes = [
   {
     path: 'patient/ratings',
     component: PatientRateDoctorComponent,
+    canActivate: [PatientAuthGuard]
+  },
+  {
+    path: 'patient/doctors',
+    component: SearchDoctorsComponent,
     canActivate: [PatientAuthGuard]
   },
 

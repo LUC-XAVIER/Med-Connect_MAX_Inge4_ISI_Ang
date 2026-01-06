@@ -114,6 +114,35 @@ export class DoctorController {
     }
   }
 
+  // Admin stats
+  async getAdminStats(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const stats = await doctorService.getAdminStats();
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Top rated doctors
+  async getTopRated(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const doctors = await doctorService.getTopRatedDoctors(limit);
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: doctors,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // Delete doctor profile
   async deleteProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

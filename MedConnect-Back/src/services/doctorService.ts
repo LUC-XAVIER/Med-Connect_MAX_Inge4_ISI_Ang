@@ -1,5 +1,6 @@
 import doctorRepository from '../repositories/doctorRepository';
 import userRepository from '../repositories/userRepository';
+import patientRepository from '../repositories/patientRepository';
 import { IDoctor } from '../models/mysql/Doctor';
 import { AppError } from '../middleware/errorHandler';
 import { HTTP_STATUS } from '../utils/constants';
@@ -135,6 +136,32 @@ export class DoctorService {
 
     await doctorRepository.verify(doctorId);
     logger.info(`Doctor verified: doctor_id=${doctorId}`);
+  }
+
+  // Admin stats for dashboard
+  async getAdminStats(): Promise<{
+    totalDoctors: number;
+    verifiedDoctors: number;
+    unverifiedDoctors: number;
+    totalPatients: number;
+  }> {
+    const [totalDoctors, verifiedDoctors, totalPatients] = await Promise.all([
+      doctorRepository.count(),
+      doctorRepository.count(true),
+      patientRepository.count()
+    ]);
+
+    return {
+      totalDoctors,
+      verifiedDoctors,
+      unverifiedDoctors: totalDoctors - verifiedDoctors,
+      totalPatients
+    };
+  }
+
+  // Top rated doctors (for admin dashboard)
+  async getTopRatedDoctors(limit: number = 5): Promise<any[]> {
+    return await doctorRepository.getTopRated(limit);
   }
 
   // Delete doctor (soft delete user)
