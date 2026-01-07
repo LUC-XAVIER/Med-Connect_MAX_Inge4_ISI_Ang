@@ -5,7 +5,8 @@ require('dotenv').config();
 
 async function setupDatabase() {
   let connection;
-  
+  const dbName = process.env.MYSQL_DATABASE || 'medconnect';
+
   try {
     // Connect without specifying database first
     connection = await mysql.createConnection({
@@ -16,6 +17,14 @@ async function setupDatabase() {
     });
 
     console.log('✅ Connected to MySQL server');
+
+    // Create database if it doesn't exist
+    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
+    console.log(`✅ Database '${dbName}' ensured`);
+
+    // Now, connect to the specific database
+    await connection.changeUser({ database: dbName });
+    console.log(`✅ Switched to database '${dbName}'`);
 
     // Read and execute SQL file
     const sqlFile = path.join(__dirname, 'mysql_setup.sql');
@@ -31,6 +40,9 @@ async function setupDatabase() {
         return trimmed.length > 0 && !trimmed.startsWith('--') && !trimmed.startsWith('/*');
       })
       .join('\n');
+
+    // Remove the USE statement from the SQL file, as we are already connected to the correct database
+    cleanSql = cleanSql.replace(/USE .*;/, '');
 
     // Split by semicolons
     const statements = cleanSql
@@ -55,11 +67,6 @@ async function setupDatabase() {
             if (dbMatch) {
               console.log(`✅ Created database: ${dbMatch[1]}`);
             }
-          } else if (statement.toUpperCase().includes('USE')) {
-            const useMatch = statement.match(/USE\s+`?(\w+)`?/i);
-            if (useMatch) {
-              console.log(`✅ Using database: ${useMatch[1]}`);
-            }
           }
         } catch (err) {
           // Ignore "table already exists" and "database already exists" errors
@@ -78,7 +85,7 @@ async function setupDatabase() {
     }
 
     console.log('✅ Database setup completed successfully!');
-    console.log('📊 Database:', process.env.MYSQL_DATABASE || 'medconnect');
+    console.log('📊 Database:', dbName);
     
   } catch (error) {
     console.error('❌ Database setup failed:', error.message);
@@ -91,4 +98,3 @@ async function setupDatabase() {
 }
 
 setupDatabase();
-

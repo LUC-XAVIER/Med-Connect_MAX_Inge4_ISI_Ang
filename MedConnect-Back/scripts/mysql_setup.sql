@@ -3,11 +3,8 @@
 -- Med-Connect Database Schema
 -- ============================================
 
-CREATE DATABASE IF NOT EXISTS medconnect;
-USE medconnect;
-
 -- 1. Users table (UPDATED - added profile_picture)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
@@ -24,8 +21,36 @@ CREATE TABLE users (
     INDEX idx_role (role)
 );
 
+
+
+-- Insert a default admin user
+INSERT INTO users (
+    first_name,
+    last_name,
+    email,
+    password_hash,
+    role,
+    contact,
+    address,
+    profile_picture,
+    is_active
+) VALUES (
+    'Default',
+    'Admin',
+    'foningxavier@gmail.com',
+    '$2b$10$VkwBau7PBp7Pj8PqsSpAxO5o0LL0rBwXuZxGXCC98iFoRmssZFZOq', 
+    'admin',
+    '0000000000',
+    'Head Office',
+    NULL,
+    TRUE
+);
+
+
+
+
 -- 2. Patients table (NO CHANGES)
-CREATE TABLE patients (
+CREATE TABLE IF NOT EXISTS patients (
     patient_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     dob DATE NOT NULL,
@@ -36,7 +61,7 @@ CREATE TABLE patients (
 );
 
 -- 3. Doctors table (UPDATED - added rating)
-CREATE TABLE doctors (
+CREATE TABLE IF NOT EXISTS doctors (
     doctor_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     specialty VARCHAR(200) NOT NULL,
@@ -54,7 +79,7 @@ CREATE TABLE doctors (
 );
 
 -- 4. Connections table (NO CHANGES)
-CREATE TABLE connections (
+CREATE TABLE IF NOT EXISTS connections (
     connection_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
@@ -69,7 +94,7 @@ CREATE TABLE connections (
 );
 
 -- 5. Shared Records table (NO CHANGES)
-CREATE TABLE shared_records (
+CREATE TABLE IF NOT EXISTS shared_records (
     share_id INT AUTO_INCREMENT PRIMARY KEY,
     connection_id INT NOT NULL,
     record_id VARCHAR(50) NOT NULL,
@@ -80,7 +105,7 @@ CREATE TABLE shared_records (
 );
 
 -- 6. Messages table (NO CHANGES)
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     message_id INT AUTO_INCREMENT PRIMARY KEY,
     sender_id INT NOT NULL,
     receiver_id INT NOT NULL,
@@ -95,7 +120,7 @@ CREATE TABLE messages (
 );
 
 -- 7. Doctor Ratings table (NEW)
-CREATE TABLE doctor_ratings (
+CREATE TABLE IF NOT EXISTS doctor_ratings (
     rating_id INT AUTO_INCREMENT PRIMARY KEY,
     doctor_id INT NOT NULL,
     patient_id INT NOT NULL,
@@ -111,7 +136,7 @@ CREATE TABLE doctor_ratings (
 );
 
 -- 8. Prescriptions table (NEW)
-CREATE TABLE prescriptions (
+CREATE TABLE IF NOT EXISTS prescriptions (
     prescription_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
@@ -129,7 +154,7 @@ CREATE TABLE prescriptions (
 );
 
 -- 9. Prescription Medications table (NEW)
-CREATE TABLE prescription_medications (
+CREATE TABLE IF NOT EXISTS prescription_medications (
     medication_id INT AUTO_INCREMENT PRIMARY KEY,
     prescription_id INT NOT NULL,
     medication_name VARCHAR(200) NOT NULL,
@@ -143,7 +168,7 @@ CREATE TABLE prescription_medications (
 );
 
 -- 10. Appointments table (NEW)
-CREATE TABLE appointments (
+CREATE TABLE IF NOT EXISTS appointments (
     appointment_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
@@ -164,7 +189,7 @@ CREATE TABLE appointments (
 );
 
 -- 11. Password Reset Tokens table (NEW)
-CREATE TABLE password_reset_tokens (
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     token VARCHAR(255) NOT NULL UNIQUE,
