@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import messageService from '../services/messageService';
 
 export class MessageController {
-  // Send a message (REST endpoint - also handled by Socket.io)
+  // Send a message
   async sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const senderId = req.user?.user_id;

@@ -30,6 +30,67 @@ export class ConnectionController {
         }
     }
 
+    // Get pending connection requests (doctor only)
+    async getPendingRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const doctorUserId = req.user?.user_id;
+
+            if (!doctorUserId) {
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                    success: false,
+                    message: 'Doctor not authenticated',
+                });
+                return;
+            }
+
+            // Get connections with status 'pending' for this doctor
+            const pendingRequests = await connectionService.getDoctorConnections(doctorUserId, 'pending');
+
+            res.status(HTTP_STATUS.OK).json({
+                success: true,
+                data: pendingRequests,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // Get connection status between patient and doctor
+    async getConnectionStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const patientUserId = req.user?.user_id;
+            const doctorUserId = parseInt(req.params.doctorUserId);
+
+            if (!patientUserId) {
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                    success: false,
+                    message: 'Patient not authenticated',
+                });
+                return;
+            }
+
+            const connection = await connectionService.getConnectionBetweenUsers(patientUserId, doctorUserId);
+
+            if (!connection) {
+                res.status(HTTP_STATUS.OK).json({
+                    success: true,
+                    data: { status: 'none', connection_id: null },
+                });
+                return;
+            }
+
+            res.status(HTTP_STATUS.OK).json({
+                success: true,
+                data: {
+                    status: connection.status,
+                    connection_id: connection.connection_id,
+                },
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // Doctor approves connection
     async approveConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

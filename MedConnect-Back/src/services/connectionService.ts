@@ -58,6 +58,7 @@ export class ConnectionService {
 
     return connection;
   }
+
   // Doctor approves connection request
   async approveConnection(connectionId: number, doctorUserId: number): Promise<any> {
     const connection = await connectionRepository.findById(connectionId);
@@ -149,6 +150,26 @@ export class ConnectionService {
     }
 
     return await connectionRepository.getDoctorConnections(doctor.doctor_id, status);
+  }
+
+  // Get connection between patient and doctor
+  async getConnectionBetweenUsers(patientUserId: number, doctorUserId: number): Promise<any> {
+    const patient = await patientRepository.findByUserId(patientUserId);
+    if (!patient) {
+      throw new AppError('Patient profile not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    const doctor = await doctorRepository.findByUserId(doctorUserId);
+    if (!doctor) {
+      throw new AppError('Doctor profile not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    const connection = await connectionRepository.findByPatientAndDoctor(
+      patient.patient_id,
+      doctor.doctor_id
+    );
+
+    return connection;
   }
 
   // Share specific records with doctor

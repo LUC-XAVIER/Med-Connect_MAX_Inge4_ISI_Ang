@@ -5,10 +5,12 @@ import { requestConnectionValidation, shareRecordsValidation, validate } from '.
 
 const router = Router();
 
+// All routes require authentication
+router.use(authenticate);
+
 // Patient routes
 router.post(
   '/request',
-  authenticate,
   isPatient,
   requestConnectionValidation,
   validate,
@@ -17,7 +19,6 @@ router.post(
 
 router.post(
   '/:connectionId/share',
-  authenticate,
   isPatient,
   shareRecordsValidation,
   validate,
@@ -26,7 +27,6 @@ router.post(
 
 router.post(
   '/:connectionId/unshare',
-  authenticate,
   isPatient,
   shareRecordsValidation,
   validate,
@@ -35,36 +35,44 @@ router.post(
 
 router.post(
   '/:connectionId/share-all',
-  authenticate,
   isPatient,
   connectionController.shareAllRecords
 );
 
+// Get connection status (patient checks status with doctor)
+router.get(
+  '/status/:doctorUserId',
+  isPatient,
+  connectionController.getConnectionStatus
+);
+
 // Doctor routes
+router.get(
+  '/pending',
+  isDoctor,
+  connectionController.getPendingRequests
+);
+
 router.put(
   '/:connectionId/approve',
-  authenticate,
   isDoctor,
   connectionController.approveConnection
 );
 
 router.put(
   '/:connectionId/reject',
-  authenticate,
   isDoctor,
   connectionController.rejectConnection
 );
 
 router.put(
   '/:connectionId/revoke',
-  authenticate,
   isDoctor,
   connectionController.revokeConnection
 );
 
 router.get(
   '/patient/:patientUserId/records',
-  authenticate,
   isDoctor,
   connectionController.viewPatientRecords
 );
@@ -72,13 +80,11 @@ router.get(
 // Both patient and doctor can access
 router.get(
   '/',
-  authenticate,
   connectionController.getMyConnections
 );
 
 router.get(
   '/:connectionId/shared-records',
-  authenticate,
   connectionController.getSharedRecords
 );
 

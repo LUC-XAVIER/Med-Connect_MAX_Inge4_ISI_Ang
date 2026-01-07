@@ -39,7 +39,7 @@
     "file-type": "^21.1.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.21.0",
+    "mongodb": "^6.3.0",
     "mongoose": "^9.0.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
