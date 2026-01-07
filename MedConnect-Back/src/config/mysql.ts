@@ -1,6 +1,6 @@
 import mysql, { Pool, PoolOptions } from 'mysql2/promise';
 import dotenv from 'dotenv';
-import logger from '@utils/logger';
+import logger from '../utils/logger';
 
 dotenv.config();
 
