@@ -1,11 +1,13 @@
 # Med-Connect
 Med-Connect is a secure, cross-platform healthcare platform that gives patients ownership of their medical history while enabling healthcare professionals to access patient data securely and on demand.
 
-This repository contains the backend API (in `MedConnect-Back`) and a frontend (in `MedConnect-Front`). This README documents how to get the backend running locally and the REST + WebSocket APIs it exposes.
+This repository contains the backend API (in `MedConnect-Back`) and a frontend (in `med-connect-WebFront/` and `medical-app-react-native/`). This README documents how to get the backend running locally and the REST + WebSocket APIs it exposes.
 
 **Repository layout**
 - `MedConnect-Back/`: TypeScript Express backend (APIs, services, DB config, scripts)
-- `MedConnect-Front/`: Frontend app (mobile/web client)
+- `med-connect-WebFront/`: Frontend app (web client)
+- `medical-app-react-native/`: Frontend app (mobile client)
+
 
 **Quick links**
 - Backend server code: MedConnect-Back
@@ -48,7 +50,7 @@ Create a file named `.env` with at least the following variables (adjust values 
 PORT=3000
 NODE_ENV=development
 API_VERSION=v1
-CORS_ORIGIN=http://localhost:3000,http://localhost:19006
+CORS_ORIGIN=http://localhost:3000,http://localhost:19006,https://hilarious-tanuki-8007e9.netlify.app
 JWT_SECRET=super_secret_jwt_key
 JWT_EXPIRE=7d
 MONGODB_URI=mongodb://localhost:27017/medconnect

@@ -24,6 +24,34 @@ CREATE TABLE users (
     INDEX idx_role (role)
 );
 
+
+
+-- Insert a default admin user
+INSERT INTO users (
+    first_name,
+    last_name,
+    email,
+    password_hash,
+    role,
+    contact,
+    address,
+    profile_picture,
+    is_active
+) VALUES (
+    'Default',
+    'Admin',
+    'foningxavier@gmail.com',
+    '$2b$10$VkwBau7PBp7Pj8PqsSpAxO5o0LL0rBwXuZxGXCC98iFoRmssZFZOq', 
+    'admin',
+    '0000000000',
+    'Head Office',
+    NULL,
+    TRUE
+);
+
+
+
+
 -- 2. Patients table (NO CHANGES)
 CREATE TABLE patients (
     patient_id INT AUTO_INCREMENT PRIMARY KEY,
