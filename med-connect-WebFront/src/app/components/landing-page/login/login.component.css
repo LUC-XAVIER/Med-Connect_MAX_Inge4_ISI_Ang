@@ -13,35 +13,14 @@
 .background-image {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=1920&h=1080&fit=crop');
+  /* Background image is set via ngStyle in the template to avoid build errors */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
 }
 
-/* Alternative African medical backgrounds - uncomment to use:
 
-African Hospital Room:
-.background-image {
-  background-image: url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1920&h=1080&fit=crop');
-}
-
-African Doctors in Lab Coats:
-.background-image {
-  background-image: url('https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=1920&h=1080&fit=crop');
-}
-
-African Medical Team:
-.background-image {
-  background-image: url('https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=1920&h=1080&fit=crop');
-}
-
-Or use your own local image:
-.background-image {
-  background-image: url('/assets/images/african-hospital.jpg');
-}
-*/
 
 /* Blue Gradient Overlay */
 .background-overlay {
@@ -607,6 +586,46 @@ Or use your own local image:
   transform: translateX(4px);
 }
 
+/* Alert Messages */
+.alert {
+  padding: 1rem 1.25rem;
+  border-radius: 0.875rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.5;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.alert-info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 /* Signup Prompt */
 .signup-prompt {
   text-align: center;
@@ -765,4 +784,18 @@ Or use your own local image:
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+}
+
+/* Field-specific error messages */
+.field-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  padding-left: 0.5rem;
+  display: block;
+}
+
+.form-input.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }

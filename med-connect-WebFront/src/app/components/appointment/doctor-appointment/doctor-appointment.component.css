@@ -356,12 +356,12 @@
 /* Button Styles - Enhanced */
 .btn-view-all {
   padding: 10px 20px;
-  background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+  background: linear-gradient(135deg, #14b8a6, #0d9488) !important;
   border: none;
   border-radius: 12px;
   font-size: 13px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -639,11 +639,11 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-teal), var(--accent-blue));
+  background: linear-gradient(135deg, #14b8a6, #2563eb) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
   font-weight: 700;
   font-size: 18px;
   box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
@@ -1371,49 +1371,49 @@
 }
 
 .btn-success {
-  background: linear-gradient(135deg, var(--success-green), #059669);
-  color: white;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-success:hover {
-  background: linear-gradient(135deg, #059669, #047857);
+  background: linear-gradient(135deg, #059669, #047857) !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
-  color: white;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: white !important;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, var(--warning-amber), #d97706);
-  color: white;
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .btn-warning:hover {
-  background: linear-gradient(135deg, #d97706, #b45309);
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--danger-red), #dc2626);
-  color: white;
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .btn-danger:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
 }

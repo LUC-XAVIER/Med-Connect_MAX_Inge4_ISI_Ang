@@ -20,6 +20,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage = '';
   returnUrl = '/';
+  backgroundImageUrl = 'assets/images/login/login-background.jpg';
+
+  // Field-specific errors
+  fieldErrors: {
+    patient?: { email?: string; password?: string };
+    doctor?: { email?: string; password?: string };
+    admin?: { email?: string; password?: string };
+  } = {};
 
   // Form data
   patientForm = {
@@ -94,16 +102,18 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.isLoading = false;
     this.adminForm = { email: '', password: '', rememberMe: false };
+    this.fieldErrors = {};
   }
 
   // Patient login
   loginAsPatient() {
-    if (!this.validateForm(this.patientForm)) {
+    if (!this.validateForm(this.patientForm, 'patient')) {
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.clearFieldErrors('patient');
 
     this.authService.login(this.patientForm.email, this.patientForm.password)
       .pipe(takeUntil(this.destroy$))
@@ -139,6 +149,21 @@ export class LoginComponent implements OnInit, OnDestroy {
             error: error.error
           });
 
+          // Handle rate limit errors (429) with special message
+          if (error.status === 429) {
+            let rateLimitMsg = 'Too many login attempts. Please wait 15 minutes before trying again.';
+            if (error.error) {
+              if (error.error.error) {
+                rateLimitMsg = error.error.error;
+              } else if (error.error.message) {
+                rateLimitMsg = error.error.message;
+              }
+            }
+            this.errorMessage = rateLimitMsg;
+            this.isLoading = false;
+            return;
+          }
+
           // Extract error message from backend response
           let errorMsg = 'Login failed. Please try again.';
           if (error.error) {
@@ -151,7 +176,14 @@ export class LoginComponent implements OnInit, OnDestroy {
             errorMsg = error.message;
           }
 
-          this.errorMessage = errorMsg;
+          // Set field-specific errors based on error message
+          if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('user not found')) {
+            this.setFieldError('patient', 'email', errorMsg);
+          } else if (errorMsg.toLowerCase().includes('password') || errorMsg.toLowerCase().includes('invalid password')) {
+            this.setFieldError('patient', 'password', errorMsg);
+          } else {
+            this.errorMessage = errorMsg;
+          }
           this.isLoading = false;
         }
       });
@@ -159,12 +191,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   // Doctor login
   loginAsDoctor() {
-    if (!this.validateForm(this.doctorForm)) {
+    if (!this.validateForm(this.doctorForm, 'doctor')) {
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.clearFieldErrors('doctor');
 
     console.log('Attempting doctor login with email:', this.doctorForm.email);
 
@@ -202,6 +235,21 @@ export class LoginComponent implements OnInit, OnDestroy {
             error: error.error
           });
 
+          // Handle rate limit errors (429) with special message
+          if (error.status === 429) {
+            let rateLimitMsg = 'Too many login attempts. Please wait 15 minutes before trying again.';
+            if (error.error) {
+              if (error.error.error) {
+                rateLimitMsg = error.error.error;
+              } else if (error.error.message) {
+                rateLimitMsg = error.error.message;
+              }
+            }
+            this.errorMessage = rateLimitMsg;
+            this.isLoading = false;
+            return;
+          }
+
           // Extract error message from backend response
           let errorMsg = 'Login failed. Please try again.';
           if (error.error) {
@@ -214,7 +262,14 @@ export class LoginComponent implements OnInit, OnDestroy {
             errorMsg = error.message;
           }
 
-          this.errorMessage = errorMsg;
+          // Set field-specific errors based on error message
+          if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('user not found')) {
+            this.setFieldError('doctor', 'email', errorMsg);
+          } else if (errorMsg.toLowerCase().includes('password') || errorMsg.toLowerCase().includes('invalid password')) {
+            this.setFieldError('doctor', 'password', errorMsg);
+          } else {
+            this.errorMessage = errorMsg;
+          }
           this.isLoading = false;
         }
       });
@@ -222,12 +277,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   // Admin login
   loginAsAdmin() {
-    if (!this.validateForm(this.adminForm)) {
+    if (!this.validateForm(this.adminForm, 'admin')) {
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.clearFieldErrors('admin');
 
     this.authService.login(this.adminForm.email, this.adminForm.password)
       .pipe(takeUntil(this.destroy$))
@@ -256,40 +312,60 @@ export class LoginComponent implements OnInit, OnDestroy {
           } else if (error.message) {
             errorMsg = error.message;
           }
-          this.errorMessage = errorMsg;
+
+          // Set field-specific errors based on error message
+          if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('user not found')) {
+            this.setFieldError('admin', 'email', errorMsg);
+          } else if (errorMsg.toLowerCase().includes('password') || errorMsg.toLowerCase().includes('invalid password')) {
+            this.setFieldError('admin', 'password', errorMsg);
+          } else {
+            this.errorMessage = errorMsg;
+          }
           this.isLoading = false;
         }
       });
   }
 
   // Form validation
-  private validateForm(form: { email: string; password: string }): boolean {
+  private validateForm(form: { email: string; password: string }, role: 'patient' | 'doctor' | 'admin'): boolean {
+    this.clearFieldErrors(role);
+    let isValid = true;
+
     if (!form.email.trim()) {
-      this.errorMessage = 'Email is required';
-      return false;
+      this.setFieldError(role, 'email', 'Email is required');
+      isValid = false;
+    } else if (!this.isValidEmail(form.email)) {
+      this.setFieldError(role, 'email', 'Please enter a valid email address');
+      isValid = false;
     }
 
-    if (!this.isValidEmail(form.email)) {
-      this.errorMessage = 'Please enter a valid email address';
-      return false;
+    if (!form.password) {
+      this.setFieldError(role, 'password', 'Password is required');
+      isValid = false;
     }
 
-    if (!form.password.trim()) {
-      this.errorMessage = 'Password is required';
-      return false;
-    }
-
-    if (form.password.length < 6) {
-      this.errorMessage = 'Password must be at least 6 characters long';
-      return false;
-    }
-
-    return true;
+    return isValid;
   }
 
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  private setFieldError(role: 'patient' | 'doctor' | 'admin', field: 'email' | 'password', message: string): void {
+    if (!this.fieldErrors[role]) {
+      this.fieldErrors[role] = {};
+    }
+    this.fieldErrors[role]![field] = message;
+  }
+
+  private clearFieldErrors(role: 'patient' | 'doctor' | 'admin'): void {
+    this.fieldErrors[role] = {};
+    this.errorMessage = '';
+  }
+
+  getFieldError(role: 'patient' | 'doctor' | 'admin', field: 'email' | 'password'): string | undefined {
+    return this.fieldErrors[role]?.[field];
   }
 
   // Handle successful login

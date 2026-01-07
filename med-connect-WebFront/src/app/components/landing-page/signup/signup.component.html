@@ -55,8 +55,12 @@
                 [(ngModel)]="patientForm.firstName"
                 name="patientFirstName"
                 class="form-input"
+                [class.error]="getFieldError('patient', 'firstName')"
                 placeholder="John"
                 required>
+            </div>
+            <div class="field-error" *ngIf="getFieldError('patient', 'firstName')">
+              {{ getFieldError('patient', 'firstName') }}
             </div>
           </div>
 
@@ -73,8 +77,12 @@
                 [(ngModel)]="patientForm.lastName"
                 name="patientLastName"
                 class="form-input"
+                [class.error]="getFieldError('patient', 'lastName')"
                 placeholder="Doe"
                 required>
+            </div>
+            <div class="field-error" *ngIf="getFieldError('patient', 'lastName')">
+              {{ getFieldError('patient', 'lastName') }}
             </div>
           </div>
           <!-- Email & Phone Row -->
@@ -91,8 +99,12 @@
                   [(ngModel)]="patientForm.email"
                   name="patientEmail"
                   class="form-input"
+                  [class.error]="getFieldError('patient', 'email')"
                   placeholder="you@example.com"
                   required>
+              </div>
+              <div class="field-error" *ngIf="getFieldError('patient', 'email')">
+                {{ getFieldError('patient', 'email') }}
               </div>
             </div>
 
@@ -107,8 +119,12 @@
                   [(ngModel)]="patientForm.phone"
                   name="patientPhone"
                   class="form-input"
+                  [class.error]="getFieldError('patient', 'phone')"
                   placeholder="+1 (555) 000-0000"
                   required>
+              </div>
+              <div class="field-error" *ngIf="getFieldError('patient', 'phone')">
+                {{ getFieldError('patient', 'phone') }}
               </div>
             </div>
           </div>
@@ -129,7 +145,11 @@
                   [(ngModel)]="patientForm.dateOfBirth"
                   name="patientDOB"
                   class="form-input"
+                  [class.error]="getFieldError('patient', 'dateOfBirth')"
                   required>
+              </div>
+              <div class="field-error" *ngIf="getFieldError('patient', 'dateOfBirth')">
+                {{ getFieldError('patient', 'dateOfBirth') }}
               </div>
             </div>
 
@@ -203,6 +223,7 @@
                   [(ngModel)]="patientForm.password"
                   name="patientPassword"
                   class="form-input"
+                  [class.error]="getFieldError('patient', 'password')"
                   placeholder="••••••••"
                   required>
                 <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
@@ -214,6 +235,9 @@
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
+              </div>
+              <div class="field-error" *ngIf="getFieldError('patient', 'password')">
+                {{ getFieldError('patient', 'password') }}
               </div>
             </div>
 
@@ -229,6 +253,7 @@
                   [(ngModel)]="patientForm.confirmPassword"
                   name="patientConfirmPassword"
                   class="form-input"
+                  [class.error]="getFieldError('patient', 'confirmPassword')"
                   placeholder="••••••••"
                   required>
                 <button type="button" class="toggle-password" (click)="toggleConfirmPasswordVisibility()">
@@ -240,6 +265,9 @@
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
+              </div>
+              <div class="field-error" *ngIf="getFieldError('patient', 'confirmPassword')">
+                {{ getFieldError('patient', 'confirmPassword') }}
               </div>
             </div>
           </div>

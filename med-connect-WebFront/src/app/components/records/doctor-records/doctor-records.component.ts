@@ -38,6 +38,7 @@ export class DoctorRecordsComponent implements OnInit, OnDestroy {
   showPatientModal = false;
   showProfileModal = false;
   showRecordModal = false;
+  showRecordsModal = false;
   selectedRecord: MedicalRecord | null = null;
   currentUser: any = null;
   unreadCount: number = 0;
@@ -146,6 +147,7 @@ export class DoctorRecordsComponent implements OnInit, OnDestroy {
     }
 
     this.selectedPatient = connection;
+    this.showRecordsModal = true;
     this.isLoadingRecords = true;
     this.patientRecords = [];
     this.filteredRecords = [];
@@ -184,6 +186,13 @@ export class DoctorRecordsComponent implements OnInit, OnDestroy {
         this.isLoadingRecords = false;
       }
     });
+  }
+
+  closeRecordsModal(): void {
+    this.showRecordsModal = false;
+    this.selectedPatient = null;
+    this.patientRecords = [];
+    this.filteredRecords = [];
   }
 
   applyFilters(): void {

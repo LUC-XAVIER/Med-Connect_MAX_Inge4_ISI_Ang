@@ -23,7 +23,9 @@ router.delete('/profile', authenticate, isDoctor, doctorController.deleteProfile
 
 // Admin routes
 router.put('/:doctorId/verify', authenticate, isAdmin, doctorController.verifyDoctor);
+router.put('/:doctorId/reject', authenticate, isAdmin, doctorController.rejectDoctor);
 router.get('/admin/stats', authenticate, isAdmin, doctorController.getAdminStats);
-router.get('/top-rated', authenticate, isAdmin, doctorController.getTopRated);
+// Top-rated doctors - accessible to all authenticated users (patients and doctors)
+router.get('/top-rated', authenticate, doctorController.getTopRated);
 
 export default router;

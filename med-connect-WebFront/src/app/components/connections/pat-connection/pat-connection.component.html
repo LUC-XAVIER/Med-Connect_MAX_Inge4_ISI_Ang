@@ -173,12 +173,20 @@
                     <p class="specialization">{{ connection.doctor_specialization }}</p>
                     <div class="connection-meta">
                       <span *ngIf="connection.doctor_hospital">🏥 {{ connection.doctor_hospital }}</span>
-                      <span class="verified-badge">
+                      <span *ngIf="connection.doctor_verified === true" class="verified-badge">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
                           <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
                         </svg>
-                        Connected
+                        Verified
+                      </span>
+                      <span *ngIf="connection.doctor_verified !== true" class="unverified-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+                          <line x1="12" y1="7" x2="12" y2="13" stroke="currentColor" stroke-width="2"></line>
+                          <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+                        </svg>
+                        Unverified
                       </span>
                     </div>
                   </div>

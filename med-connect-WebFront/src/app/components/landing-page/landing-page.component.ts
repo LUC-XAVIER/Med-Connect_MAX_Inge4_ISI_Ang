@@ -1,11 +1,13 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { NewsletterService } from '../../services/newsletter.service';
 
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.css']
 })
@@ -15,6 +17,12 @@ export class LandingPageComponent implements OnInit {
   currentTestimonial = 0;
   currentSlide = 0;
   carouselInterval: any;
+
+  // Newsletter subscription
+  newsletterEmail = '';
+  isSubscribing = false;
+  newsletterMessage = '';
+  newsletterError = '';
 
   blogs = [
     {
@@ -55,7 +63,7 @@ export class LandingPageComponent implements OnInit {
     }
   ];
 
-  constructor() { }
+  constructor(private newsletterService: NewsletterService) { }
 
   ngOnInit(): void {
     this.observeElements();
@@ -152,6 +160,40 @@ export class LandingPageComponent implements OnInit {
 
       if (rect.top < windowHeight * 0.85) {
         element.classList.add('visible');
+      }
+    });
+  }
+
+  onSubmitNewsletter(event: Event): void {
+    event.preventDefault();
+    const email = this.newsletterEmail.trim();
+    this.newsletterError = '';
+    this.newsletterMessage = '';
+
+    if (!email) {
+      this.newsletterError = 'Please enter your email address.';
+      return;
+    }
+
+    // Very simple email format check to give instant feedback
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      this.newsletterError = 'Please enter a valid email address.';
+      return;
+    }
+
+    this.isSubscribing = true;
+
+    this.newsletterService.subscribe(email).subscribe({
+      next: (message) => {
+        this.newsletterMessage = message || 'If the email is valid, a subscription confirmation has been sent.';
+        this.isSubscribing = false;
+        this.newsletterEmail = '';
+      },
+      error: (error) => {
+        console.error('Newsletter subscription error:', error);
+        this.newsletterError = error.error?.message || 'Subscription failed. Please try again later.';
+        this.isSubscribing = false;
       }
     });
   }

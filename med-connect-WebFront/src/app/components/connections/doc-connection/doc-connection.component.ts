@@ -215,8 +215,12 @@ export class DocConnectionsComponent implements OnInit, OnDestroy {
   }
 
   viewPatientRecords(connection: ConnectionWithDetails): void {
-    this.router.navigate(['/doctor/patient-records', connection.patient_id]);
+    // Navigate to doctor records page, passing patient user id so records screen can auto-select
+    this.router.navigate(['/doctor/records'], {
+      queryParams: { patientUserId: connection.patient_user_id }
+    });
   }
+
 
   openPatientDetails(connection: ConnectionWithDetails): void {
     this.selectedConnection = connection;
