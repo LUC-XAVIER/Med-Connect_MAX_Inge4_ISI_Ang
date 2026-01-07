@@ -1,8 +1,8 @@
 import app from './app';
-import { connectMongoDB } from '@config/mongodb';
-import { connectMySQL } from '@config/mysql';
-import logger from '@utils/logger';
-import { initializeSocket } from '@utils/socketHandler';
+import { connectMongoDB } from 'config/mongodb';
+import { connectMySQL } from 'config/mysql';
+import logger from 'utils/logger';
+import { initializeSocket } from 'utils/socketHandler';
 import dotenv from 'dotenv';
 import http from 'http';
 
