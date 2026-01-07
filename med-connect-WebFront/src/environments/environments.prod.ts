@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://your-api-domain.com/api'
+  apiUrl: 'med-connectmaxinge4isiang-production.up.railway.app'
 };

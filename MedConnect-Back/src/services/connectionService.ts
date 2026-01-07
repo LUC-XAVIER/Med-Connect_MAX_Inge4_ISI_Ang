@@ -2,8 +2,8 @@ import connectionRepository from '../repositories/connectionRepository';
 import patientRepository from '../repositories/patientRepository';
 import doctorRepository from '../repositories/doctorRepository';
 import recordRepository from '../repositories/recordRepository';
-import { AppError } from '@middleware/errorHandler';
-import { HTTP_STATUS } from '@utils/constants';
+import { AppError } from '../middleware/errorHandler';
+import { HTTP_STATUS } from '../utils/constants';
 import logger from '../utils/logger';
 
 export class ConnectionService {
