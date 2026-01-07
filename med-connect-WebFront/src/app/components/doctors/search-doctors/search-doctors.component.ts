@@ -6,6 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { DoctorService } from '../../../services/doctor.service';
 import { Doctor } from '../../../models/doctor.model';
 import { MessageService } from '../../../services/message.service';
+import { ConnectionService } from '../../../services/connection.service';
 import { SidebarComponent } from '../../dashboard/sidebar/sidebar.component';
 import { ProfileModalComponent } from '../../profile/profile-modal.component';
 import { ProfilePictureService } from '../../../services/profile-picture.service';
@@ -27,6 +28,7 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
   doctors: Doctor[] = [];
   filteredDoctors: Doctor[] = [];
   isLoading = false;
+  connectedDoctorIds: Set<number> = new Set();
 
   // Search & Filter
   searchQuery = '';
@@ -58,6 +60,7 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private doctorService: DoctorService,
     private messageService: MessageService,
+    private connectionService: ConnectionService,
     private router: Router,
     private profilePictureService: ProfilePictureService
   ) {}
@@ -68,6 +71,7 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
       this.currentUser = JSON.parse(userStr);
     }
 
+    this.loadConnectedDoctors();
     this.loadTopRatedDoctors();
     this.loadUnreadCount();
     
@@ -89,6 +93,24 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
       this.refreshSubscription.unsubscribe();
     }
     this.searchSubject.complete();
+  }
+
+  loadConnectedDoctors(): void {
+    this.connectionService.getPatientConnections('approved').subscribe({
+      next: (connections) => {
+        this.connectedDoctorIds = new Set(
+          connections.map(c => c.doctor_user_id)
+        );
+      },
+      error: (error) => {
+        console.error('Error loading connected doctors:', error);
+        this.connectedDoctorIds = new Set();
+      }
+    });
+  }
+
+  isDoctorConnected(doctorUserId: number): boolean {
+    return this.connectedDoctorIds.has(doctorUserId);
   }
 
   loadUnreadCount(): void {
@@ -227,6 +249,19 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
 
   navigateToAppointments(doctorUserId: number): void {
     this.router.navigate(['/patient/appointments'], { queryParams: { doctorId: doctorUserId } });
+  }
+
+  requestConnection(doctorUserId: number): void {
+    this.connectionService.requestConnection(doctorUserId).subscribe({
+      next: () => {
+        alert('Connection request sent successfully!');
+        this.loadConnectedDoctors();
+      },
+      error: (error) => {
+        console.error('Error requesting connection:', error);
+        alert(error.error?.message || 'Failed to send connection request');
+      }
+    });
   }
 
   getProfilePictureUrl(filePath: string | null | undefined): string {

@@ -23,6 +23,7 @@ import { DoctorViewRatingsComponent } from "./components/ratings/doctor-view-rat
 import { ForgotPasswordComponent } from "./components/landing-page/forgot-password/forgot-password.component";
 import { ResetPasswordComponent } from "./components/landing-page/reset-password/reset-password.component";
 import { SearchDoctorsComponent } from "./components/doctors/search-doctors/search-doctors.component";
+import { SearchPatientsComponent } from "./components/patients/search-patients/search-patients.component";
 
 export const routes: Routes = [
   { path: '', component: LandingPageComponent },
@@ -66,6 +67,11 @@ export const routes: Routes = [
   {
     path: 'doctor/ratings',
     component: DoctorViewRatingsComponent,
+    canActivate: [DoctorAuthGuard]
+  },
+  {
+    path: 'doctor/patients',
+    component: SearchPatientsComponent,
     canActivate: [DoctorAuthGuard]
   },
 

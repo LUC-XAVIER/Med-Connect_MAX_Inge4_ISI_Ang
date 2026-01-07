@@ -138,6 +138,18 @@ export class DoctorService {
     logger.info(`Doctor verified: doctor_id=${doctorId}`);
   }
 
+  // Reject doctor (admin only) - deletes the doctor and user account
+  async rejectDoctor(doctorId: number, reason: string): Promise<void> {
+    const doctor = await doctorRepository.findById(doctorId);
+    if (!doctor) {
+      throw new AppError('Doctor not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    // Delete doctor (cascade will delete user account)
+    await doctorRepository.delete(doctorId);
+    logger.info(`Doctor rejected: doctor_id=${doctorId}, reason=${reason}`);
+  }
+
   // Admin stats for dashboard
   async getAdminStats(): Promise<{
     totalDoctors: number;

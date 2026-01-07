@@ -114,6 +114,31 @@ export class DoctorController {
     }
   }
 
+  // Reject doctor (admin only)
+  async rejectDoctor(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const doctorId = parseInt(req.params.doctorId);
+      const { reason } = req.body;
+
+      if (!reason || !reason.trim()) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Rejection reason is required',
+        });
+        return;
+      }
+
+      await doctorService.rejectDoctor(doctorId, reason.trim());
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: 'Doctor rejected successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // Admin stats
   async getAdminStats(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

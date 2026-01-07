@@ -143,18 +143,39 @@
                <span class="rating-text">{{ (doctor.rating || 0).toFixed(1) }} ({{ doctor.total_ratings || 0 }} reviews)</span>
              </div>
             <div class="doctor-actions">
-              <button class="btn-action" (click)="navigateToMessages(doctor.user_id); $event.stopPropagation()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                Message
-              </button>
-              <button class="btn-action" (click)="navigateToAppointments(doctor.user_id); $event.stopPropagation()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                Book
-              </button>
+              <!-- Connected Doctors: Show Book and Appointment buttons -->
+              <ng-container *ngIf="isDoctorConnected(doctor.user_id)">
+                <button class="btn-action" (click)="navigateToMessages(doctor.user_id); $event.stopPropagation()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  Message
+                </button>
+                <button class="btn-action" (click)="navigateToAppointments(doctor.user_id); $event.stopPropagation()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  Book
+                </button>
+              </ng-container>
+              <!-- Unconnected Doctors: Show Connect and Details buttons -->
+              <ng-container *ngIf="!isDoctorConnected(doctor.user_id)">
+                <button class="btn-action" (click)="requestConnection(doctor.user_id); $event.stopPropagation()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    <path d="M20 8v6M23 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  Connect
+                </button>
+                <button class="btn-action" (click)="openDoctorModal(doctor); $event.stopPropagation()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  Details
+                </button>
+              </ng-container>
             </div>
             <div class="doctor-summary" *ngIf="doctor.bio || doctor.years_of_experience || doctor.consultation_fee">
               <p *ngIf="doctor.bio">{{ doctor.bio }}</p>
@@ -224,18 +245,32 @@
           <p *ngIf="selectedDoctor.consultation_fee">Consultation: {{ selectedDoctor.consultation_fee | currency:'USD':'symbol':'1.0-0' }}</p>
         </div>
         <div class="doctor-detail-actions">
-          <button class="btn-primary" (click)="navigateToMessages(selectedDoctor.user_id)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            Send Message
-          </button>
-          <button class="btn-primary" (click)="navigateToAppointments(selectedDoctor.user_id)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            Book Appointment
-          </button>
+          <!-- Connected Doctors: Show Book and Appointment buttons -->
+          <ng-container *ngIf="isDoctorConnected(selectedDoctor.user_id)">
+            <button class="btn-primary" (click)="navigateToMessages(selectedDoctor.user_id)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Send Message
+            </button>
+            <button class="btn-primary" (click)="navigateToAppointments(selectedDoctor.user_id)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Book Appointment
+            </button>
+          </ng-container>
+          <!-- Unconnected Doctors: Show Connect button -->
+          <ng-container *ngIf="!isDoctorConnected(selectedDoctor.user_id)">
+            <button class="btn-primary" (click)="requestConnection(selectedDoctor.user_id)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+                <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                <path d="M20 8v6M23 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Connect with Doctor
+            </button>
+          </ng-container>
         </div>
       </div>
     </div>

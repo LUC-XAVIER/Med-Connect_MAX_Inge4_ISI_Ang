@@ -23,6 +23,12 @@ export class SignupComponent implements OnInit, OnDestroy {
   successMessage = '';
   errorMessage = '';
 
+  // Field-specific errors
+  fieldErrors: {
+    patient?: { [key: string]: string };
+    doctor?: { [key: string]: string };
+  } = {};
+
   // Form data
   patientForm = {
     firstName: '',
@@ -158,28 +164,71 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.isLoading = false;
   }
 
+  // Field-specific error helpers
+  private setFieldError(role: 'patient' | 'doctor', field: string, message: string): void {
+    if (!this.fieldErrors[role]) {
+      this.fieldErrors[role] = {};
+    }
+    this.fieldErrors[role]![field] = message;
+  }
+
+  private clearFieldErrors(role: 'patient' | 'doctor'): void {
+    this.fieldErrors[role] = {};
+    this.errorMessage = '';
+  }
+
+  getFieldError(role: 'patient' | 'doctor', field: string): string | undefined {
+    return this.fieldErrors[role]?.[field];
+  }
+
   // Validation methods
   validatePatientForm(): { valid: boolean; errors: string[] } {
+    this.clearFieldErrors('patient');
     const errors: string[] = [];
 
     // Required fields
-    if (!this.patientForm.firstName.trim()) errors.push('First name is required');
-    if (!this.patientForm.lastName.trim()) errors.push('Last name is required');
-    if (!this.patientForm.email.trim()) errors.push('Email is required');
-    if (!this.isValidEmail(this.patientForm.email)) errors.push('Please enter a valid email');
-    if (!this.patientForm.dateOfBirth) errors.push('Date of birth is required');
-    if (!this.patientForm.phone.trim()) errors.push('Phone number is required');
-    if (!this.patientForm.password) errors.push('Password is required');
-    if (!this.patientForm.confirmPassword) errors.push('Confirm password is required');
+    if (!this.patientForm.firstName.trim()) {
+      this.setFieldError('patient', 'firstName', 'First name is required');
+      errors.push('First name is required');
+    }
+    if (!this.patientForm.lastName.trim()) {
+      this.setFieldError('patient', 'lastName', 'Last name is required');
+      errors.push('Last name is required');
+    }
+    if (!this.patientForm.email.trim()) {
+      this.setFieldError('patient', 'email', 'Email is required');
+      errors.push('Email is required');
+    } else if (!this.isValidEmail(this.patientForm.email)) {
+      this.setFieldError('patient', 'email', 'Please enter a valid email');
+      errors.push('Please enter a valid email');
+    }
+    if (!this.patientForm.dateOfBirth) {
+      this.setFieldError('patient', 'dateOfBirth', 'Date of birth is required');
+      errors.push('Date of birth is required');
+    }
+    if (!this.patientForm.phone.trim()) {
+      this.setFieldError('patient', 'phone', 'Phone number is required');
+      errors.push('Phone number is required');
+    }
+    if (!this.patientForm.password) {
+      this.setFieldError('patient', 'password', 'Password is required');
+      errors.push('Password is required');
+    }
+    if (!this.patientForm.confirmPassword) {
+      this.setFieldError('patient', 'confirmPassword', 'Confirm password is required');
+      errors.push('Confirm password is required');
+    }
 
     // Password validation
     if (this.patientForm.password && this.patientForm.confirmPassword) {
       if (this.patientForm.password !== this.patientForm.confirmPassword) {
+        this.setFieldError('patient', 'confirmPassword', 'Passwords do not match');
         errors.push('Passwords do not match');
       }
 
       const passwordValidation = this.authService.validatePassword(this.patientForm.password);
       if (!passwordValidation.valid) {
+        this.setFieldError('patient', 'password', passwordValidation.errors.join(', '));
         errors.push(...passwordValidation.errors);
       }
     }
@@ -191,15 +240,17 @@ export class SignupComponent implements OnInit, OnDestroy {
       const age = today.getFullYear() - dob.getFullYear();
 
       if (age < 0 || age > 150) {
+        this.setFieldError('patient', 'dateOfBirth', 'Invalid date of birth');
         errors.push('Invalid date of birth');
-      }
-      if (age < 13) {
+      } else if (age < 13) {
+        this.setFieldError('patient', 'dateOfBirth', 'You must be at least 13 years old to register');
         errors.push('You must be at least 13 years old to register');
       }
     }
 
     // Terms agreement
     if (!this.patientForm.agreeToTerms) {
+      this.setFieldError('patient', 'agreeToTerms', 'You must agree to the Terms and Conditions');
       errors.push('You must agree to the Terms and Conditions');
     }
 
@@ -210,33 +261,63 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   validateDoctorForm(): { valid: boolean; errors: string[] } {
+    this.clearFieldErrors('doctor');
     const errors: string[] = [];
 
     // Required fields
-    if (!this.doctorForm.firstName.trim()) errors.push('First name is required');
-    if (!this.doctorForm.lastName.trim()) errors.push('Last name is required');
-    if (!this.doctorForm.email.trim()) errors.push('Email is required');
-    if (!this.isValidEmail(this.doctorForm.email)) errors.push('Please enter a valid email');
-    if (!this.doctorForm.phone.trim()) errors.push('Phone number is required');
-    if (!this.doctorForm.specialty) errors.push('Specialty is required');
-    if (!this.doctorForm.licenseNumber.trim()) errors.push('License number is required');
-    if (!this.doctorForm.password) errors.push('Password is required');
-    if (!this.doctorForm.confirmPassword) errors.push('Confirm password is required');
+    if (!this.doctorForm.firstName.trim()) {
+      this.setFieldError('doctor', 'firstName', 'First name is required');
+      errors.push('First name is required');
+    }
+    if (!this.doctorForm.lastName.trim()) {
+      this.setFieldError('doctor', 'lastName', 'Last name is required');
+      errors.push('Last name is required');
+    }
+    if (!this.doctorForm.email.trim()) {
+      this.setFieldError('doctor', 'email', 'Email is required');
+      errors.push('Email is required');
+    } else if (!this.isValidEmail(this.doctorForm.email)) {
+      this.setFieldError('doctor', 'email', 'Please enter a valid email');
+      errors.push('Please enter a valid email');
+    }
+    if (!this.doctorForm.phone.trim()) {
+      this.setFieldError('doctor', 'phone', 'Phone number is required');
+      errors.push('Phone number is required');
+    }
+    if (!this.doctorForm.specialty) {
+      this.setFieldError('doctor', 'specialty', 'Specialty is required');
+      errors.push('Specialty is required');
+    }
+    if (!this.doctorForm.licenseNumber.trim()) {
+      this.setFieldError('doctor', 'licenseNumber', 'License number is required');
+      errors.push('License number is required');
+    }
+    if (!this.doctorForm.password) {
+      this.setFieldError('doctor', 'password', 'Password is required');
+      errors.push('Password is required');
+    }
+    if (!this.doctorForm.confirmPassword) {
+      this.setFieldError('doctor', 'confirmPassword', 'Confirm password is required');
+      errors.push('Confirm password is required');
+    }
 
     // Password validation
     if (this.doctorForm.password && this.doctorForm.confirmPassword) {
       if (this.doctorForm.password !== this.doctorForm.confirmPassword) {
+        this.setFieldError('doctor', 'confirmPassword', 'Passwords do not match');
         errors.push('Passwords do not match');
       }
 
       const passwordValidation = this.authService.validatePassword(this.doctorForm.password);
       if (!passwordValidation.valid) {
+        this.setFieldError('doctor', 'password', passwordValidation.errors.join(', '));
         errors.push(...passwordValidation.errors);
       }
     }
 
     // Terms agreement
     if (!this.doctorForm.agreeToTerms) {
+      this.setFieldError('doctor', 'agreeToTerms', 'You must agree to the Terms and Conditions');
       errors.push('You must agree to the Terms and Conditions');
     }
 
@@ -261,6 +342,9 @@ export class SignupComponent implements OnInit, OnDestroy {
 
     if (!validation.valid) {
       this.errorMessage = validation.errors.join(', ');
+      this.successMessage = '';
+      this.successAlert = '';
+      this.infoAlert = '';
       console.error('Form validation failed:', validation.errors);
       return;
     }
@@ -272,6 +356,7 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.successMessage = '';
     this.successAlert = '';
     this.infoAlert = '';
+    this.clearFieldErrors('patient');
 
     const patientData: PatientRegisterData = {
       first_name: this.patientForm.firstName,
@@ -322,6 +407,9 @@ export class SignupComponent implements OnInit, OnDestroy {
 
     if (!validation.valid) {
       this.errorMessage = validation.errors.join(', ');
+      this.successMessage = '';
+      this.successAlert = '';
+      this.infoAlert = '';
       console.error('Form validation failed:', validation.errors);
       return;
     }
@@ -333,6 +421,7 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.successMessage = '';
     this.successAlert = '';
     this.infoAlert = '';
+    this.clearFieldErrors('doctor');
 
     const doctorData: DoctorRegisterData = {
       first_name: this.doctorForm.firstName,

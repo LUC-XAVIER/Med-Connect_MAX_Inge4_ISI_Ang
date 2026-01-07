@@ -51,7 +51,7 @@ export class WebSocketService {
       this.connected = true;
     });
 
-    this.socket.on('connected', (data) => {
+    this.socket.on('connected', (data: any) => {
       console.log('Socket authenticated:', data);
     });
 

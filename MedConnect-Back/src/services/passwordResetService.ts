@@ -48,7 +48,7 @@ export class PasswordResetService {
     });
 
     // Send email
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:19006'}/reset-password?token=${token}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:4200'}/reset-password?token=${token}`;
 
     await this.transporter.sendMail({
       from: process.env.SMTP_USER,

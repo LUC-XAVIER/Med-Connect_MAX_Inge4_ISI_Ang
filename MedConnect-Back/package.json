@@ -4,7 +4,8 @@
   "description": "Backend API for Med-Connect system",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
+    "predev": "npx kill-port 3000",
+    "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
     "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/server.ts",
     "dev:watch": "nodemon",
@@ -52,6 +53,7 @@
     "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0"
   }
 }

@@ -92,6 +92,11 @@ export class DoctorService {
     return this.http.put<void>(`${this.apiUrl}/${doctorId}/verify`, {});
   }
 
+  // Admin: reject doctor
+  rejectDoctor(doctorId: number, reason: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${doctorId}/reject`, { reason });
+  }
+
   // Admin: stats
   getAdminStats(): Observable<{ totalDoctors: number; verifiedDoctors: number; unverifiedDoctors: number; totalPatients: number }> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/admin/stats`)
