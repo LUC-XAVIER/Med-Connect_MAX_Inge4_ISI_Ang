@@ -21,6 +21,7 @@ import appointmentRoutes from './routes/appointmentRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
 import connectionRoutes from './routes/connectionRoutes';
 import messageRoutes from './routes/messageRoutes';
+import newsletterRoutes from './routes/newsletterRoutes';
 
 dotenv.config();
 
@@ -85,18 +86,26 @@ app.get([`/api/${API_VERSION}`, `/api/${API_VERSION}/`], (_req: Request, res: Re
   });
 });
 
-// Rate limiting (applied after the info route)
-// More lenient limits for development, stricter for production
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: process.env.NODE_ENV === 'production' 
-    ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100')
-    : parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '300'), // 300 requests per 15 min in dev
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api', limiter);
+// Rate limiting configuration
+// Login limiter is applied directly in authRoutes.ts
+// General API rate limiter (more lenient) - enable only in production to avoid
+// interrupting local development with 429 errors.
+if (process.env.NODE_ENV === 'production') {
+  const apiLimiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '200'),
+    message: {
+      success: false,
+      error: 'Too many requests from this IP, please try again later.',
+      message: 'Request failed. Please try again.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Apply general API limiter to all /api routes in production
+  app.use('/api', apiLimiter);
+}
 
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/patients`, patientRoutes);
@@ -109,6 +118,7 @@ app.use(`/api/${API_VERSION}/appointments`, appointmentRoutes);
 app.use(`/api/${API_VERSION}/password-reset`, passwordResetRoutes);
 app.use(`/api/${API_VERSION}/connections`, connectionRoutes);
 app.use(`/api/${API_VERSION}/messages`, messageRoutes);
+app.use(`/api/${API_VERSION}/newsletter`, newsletterRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

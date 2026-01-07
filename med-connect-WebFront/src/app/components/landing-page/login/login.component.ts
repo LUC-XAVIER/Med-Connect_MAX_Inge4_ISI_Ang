@@ -149,6 +149,21 @@ export class LoginComponent implements OnInit, OnDestroy {
             error: error.error
           });
 
+          // Handle rate limit errors (429) with special message
+          if (error.status === 429) {
+            let rateLimitMsg = 'Too many login attempts. Please wait 15 minutes before trying again.';
+            if (error.error) {
+              if (error.error.error) {
+                rateLimitMsg = error.error.error;
+              } else if (error.error.message) {
+                rateLimitMsg = error.error.message;
+              }
+            }
+            this.errorMessage = rateLimitMsg;
+            this.isLoading = false;
+            return;
+          }
+
           // Extract error message from backend response
           let errorMsg = 'Login failed. Please try again.';
           if (error.error) {
@@ -219,6 +234,21 @@ export class LoginComponent implements OnInit, OnDestroy {
             message: error.message,
             error: error.error
           });
+
+          // Handle rate limit errors (429) with special message
+          if (error.status === 429) {
+            let rateLimitMsg = 'Too many login attempts. Please wait 15 minutes before trying again.';
+            if (error.error) {
+              if (error.error.error) {
+                rateLimitMsg = error.error.error;
+              } else if (error.error.message) {
+                rateLimitMsg = error.error.message;
+              }
+            }
+            this.errorMessage = rateLimitMsg;
+            this.isLoading = false;
+            return;
+          }
 
           // Extract error message from backend response
           let errorMsg = 'Login failed. Please try again.';

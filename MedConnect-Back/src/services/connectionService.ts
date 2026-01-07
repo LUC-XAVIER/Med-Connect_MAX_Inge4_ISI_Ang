@@ -21,11 +21,6 @@ export class ConnectionService {
       throw new AppError('Doctor profile not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Check if doctor is verified (doctors must be verified to receive requests)
-    if (!doctor.verified) {
-      throw new AppError('This doctor is not yet verified and cannot accept connection requests', HTTP_STATUS.FORBIDDEN);
-    }
-
     // Check if connection already exists
     const existingConnection = await connectionRepository.findByPatientAndDoctor(
         patient.patient_id,
@@ -54,7 +49,7 @@ export class ConnectionService {
       status: 'pending',
     });
 
-    logger.info(`Connection request created: doctor_id=${doctor.doctor_id}, patient_id=${patient.patient_id}`);
+    logger.info(`Connection request created: doctor_id=${doctor.doctor_id}, patient_id=${patient.patient_id}, verified=${doctor.verified}`);
 
     return connection;
   }

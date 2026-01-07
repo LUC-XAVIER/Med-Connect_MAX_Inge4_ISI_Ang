@@ -285,13 +285,13 @@
       <div class="modal-actions">
         <button 
           *ngIf="selectedPrescription.status === PrescriptionStatus.ACTIVE"
-          class="btn-primary" 
+          class="btn btn-primary" 
           (click)="updateStatus(selectedPrescription, PrescriptionStatus.COMPLETED)">
           Mark as Completed
         </button>
         <button 
           *ngIf="selectedPrescription.status === PrescriptionStatus.ACTIVE"
-          class="btn-danger" 
+          class="btn btn-danger" 
           (click)="updateStatus(selectedPrescription, PrescriptionStatus.CANCELLED)">
           Cancel Prescription
         </button>

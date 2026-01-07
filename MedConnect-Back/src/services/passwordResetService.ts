@@ -33,6 +33,16 @@ export class PasswordResetService {
       return;
     }
 
+    // If SMTP credentials are not configured, do not attempt to create a token
+    // or send mail. We log and return; the controller still responds with a
+    // generic success message so the client UX is unchanged.
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      logger.warn(
+        `Password reset requested for ${email}, but SMTP credentials are not configured. Skipping token creation and email send.`
+      );
+      return;
+    }
+
     // Generate random token
     const token = crypto.randomBytes(32).toString('hex');
 

@@ -5,20 +5,11 @@
   background: #f5f7fa;
 }
 
-.profile-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
 .dashboard-container {
   flex: 1;
   margin-left: 260px;
   padding: 0;
   animation: fadeIn 0.5s ease-in;
-  width: calc(100% - 260px);
-  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -133,6 +124,19 @@
 }
 
 /* User Profile - Enhanced */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: profilePop 0.6s ease-out 0.3s both;
+}
 
 @keyframes profilePop {
   0% {
@@ -254,9 +258,9 @@
 /* Main Content Section */
 .main-content-section {
   padding: 0 32px 32px 32px;
+  max-width: 1120px;
+  margin: 0 auto;
   animation: fadeIn 0.8s ease-in 0.4s both;
-  max-width: 100%;
-  overflow-x: auto;
 }
 
 /* Glass Card */
@@ -673,20 +677,42 @@
   flex: 1;
 }
 
-.btn-danger {
-  padding: 10px 20px;
-  background: #EF4444;
-  color: white;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .btn-danger:hover {
-  background: #DC2626;
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
 }
 
 /* Responsive */

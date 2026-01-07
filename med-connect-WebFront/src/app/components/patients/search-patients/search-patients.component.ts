@@ -79,7 +79,11 @@ export class SearchPatientsComponent implements OnInit, OnDestroy {
 
   loadConnectedPatients(): void {
     this.isLoading = true;
-    this.connectionService.getDoctorConnections('approved').subscribe({
+    // Load all connections for this doctor, we'll handle any status-specific
+    // filtering in the component rather than at the API level so that
+    // every existing patient that has a relationship with this doctor
+    // can be searched.
+    this.connectionService.getDoctorConnections().subscribe({
       next: (connections) => {
         this.patients = connections;
         this.applyFilters();

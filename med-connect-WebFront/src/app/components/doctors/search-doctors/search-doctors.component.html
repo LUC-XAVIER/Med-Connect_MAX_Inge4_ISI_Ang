@@ -119,15 +119,25 @@
               </div>
               <div class="doctor-info">
                 <h3>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h3>
-                <p class="specialty">{{ doctor.speciality }}</p>
+                <p class="specialty">{{ doctor.speciality || doctor.specialty }}</p>
                 <div class="doctor-meta">
                   <span *ngIf="doctor.hospital_affiliation" class="hospital">🏥 {{ doctor.hospital_affiliation }}</span>
-                  <span *ngIf="doctor.verified" class="verified-badge">
+                  <!-- Treat only explicit true as verified -->
+                  <span *ngIf="doctor.verified === true" class="verified-badge">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
                       <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
                     </svg>
                     Verified
+                  </span>
+                  <!-- Any non-true value (false, 0, null, undefined) is considered unverified -->
+                  <span *ngIf="doctor.verified !== true" class="unverified-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+                      <line x1="12" y1="7" x2="12" y2="13" stroke="currentColor" stroke-width="2"></line>
+                      <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+                    </svg>
+                    Unverified
                   </span>
                 </div>
               </div>
@@ -136,11 +146,13 @@
                <div class="stars">
                  <svg *ngFor="let i of [1,2,3,4,5]; let idx = index" 
                       width="16" height="16" viewBox="0 0 24 24" 
-                      [attr.fill]="idx < (doctor.rating || 0) ? '#FFD700' : '#E5E7EB'">
+                      [attr.fill]="idx < getDoctorRating(doctor) ? '#FFD700' : '#E5E7EB'">
                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                  </svg>
                </div>
-               <span class="rating-text">{{ (doctor.rating || 0).toFixed(1) }} ({{ doctor.total_ratings || 0 }} reviews)</span>
+               <span class="rating-text">
+                 {{ getDoctorRating(doctor) | number:'1.1-1' }} ({{ doctor.total_ratings || 0 }} reviews)
+               </span>
              </div>
             <div class="doctor-actions">
               <!-- Connected Doctors: Show Book and Appointment buttons -->
@@ -160,7 +172,7 @@
               </ng-container>
               <!-- Unconnected Doctors: Show Connect and Details buttons -->
               <ng-container *ngIf="!isDoctorConnected(doctor.user_id)">
-                <button class="btn-action" (click)="requestConnection(doctor.user_id); $event.stopPropagation()">
+                <button class="btn-action" (click)="requestConnection(doctor); $event.stopPropagation()">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
                     <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
@@ -208,28 +220,38 @@
               {{ getInitials(selectedDoctor.first_name, selectedDoctor.last_name) }}
             </span>
           </div>
-          <div class="doctor-detail-info">
+            <div class="doctor-detail-info">
             <h2>Dr. {{ selectedDoctor.first_name }} {{ selectedDoctor.last_name }}</h2>
-            <p class="specialty-large">{{ selectedDoctor.speciality }}</p>
+            <p class="specialty-large">{{ selectedDoctor.speciality || selectedDoctor.specialty }}</p>
             <div class="doctor-detail-meta">
               <span *ngIf="selectedDoctor.hospital_affiliation" class="hospital">🏥 {{ selectedDoctor.hospital_affiliation }}</span>
-              <span *ngIf="selectedDoctor.verified" class="verified-badge">
+              <span *ngIf="selectedDoctor.verified === true" class="verified-badge">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
                   <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
                 </svg>
                 Verified Doctor
               </span>
+              <span *ngIf="selectedDoctor.verified !== true" class="unverified-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+                  <line x1="12" y1="7" x2="12" y2="13" stroke="currentColor" stroke-width="2"></line>
+                  <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+                </svg>
+                Unverified Doctor
+              </span>
             </div>
             <div class="doctor-rating-large">
               <div class="stars">
                 <svg *ngFor="let i of [1,2,3,4,5]; let idx = index" 
                      width="20" height="20" viewBox="0 0 24 24" 
-                     [attr.fill]="idx < (selectedDoctor.rating || 0) ? '#FFD700' : '#E5E7EB'">
+                     [attr.fill]="idx < getDoctorRating(selectedDoctor) ? '#FFD700' : '#E5E7EB'">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
               </div>
-              <span class="rating-text-large">{{ (selectedDoctor.rating || 0).toFixed(1) }} / 5.0</span>
+              <span class="rating-text-large">
+                {{ getDoctorRating(selectedDoctor) | number:'1.1-1' }} / 5.0
+              </span>
               <span class="reviews-count">({{ selectedDoctor.total_ratings || 0 }} reviews)</span>
             </div>
           </div>
@@ -262,7 +284,7 @@
           </ng-container>
           <!-- Unconnected Doctors: Show Connect button -->
           <ng-container *ngIf="!isDoctorConnected(selectedDoctor.user_id)">
-            <button class="btn-primary" (click)="requestConnection(selectedDoctor.user_id)">
+            <button class="btn-primary" (click)="requestConnection(selectedDoctor)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
                 <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
@@ -282,4 +304,40 @@
   (close)="closeProfileModal()"
   (profileUpdated)="onProfileUpdated()">
 </app-profile-modal>
+
+<!-- Unverified Doctor Warning Modal -->
+<div *ngIf="showUnverifiedWarning && pendingConnectionDoctor" class="modal-overlay" (click)="cancelUnverifiedConnection()">
+  <div class="modal-dialog warning-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Connect with Unverified Doctor?</h3>
+      <button class="close-btn" (click)="cancelUnverifiedConnection()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+          <line x1="12" y1="7" x2="12" y2="13" stroke="currentColor" stroke-width="2"></line>
+          <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+        </svg>
+      </div>
+      <p class="warning-text">
+        You are about to send a connection request to
+        <strong>Dr. {{ pendingConnectionDoctor.first_name }} {{ pendingConnectionDoctor.last_name }}</strong>,
+        who is currently <strong>not verified</strong> by the platform administrator.
+      </p>
+      <p class="warning-subtext">
+        Their credentials may not have been reviewed yet. If you are unsure, you may want to
+        wait until they are verified before sharing sensitive health information.
+      </p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="cancelUnverifiedConnection()">
+        Cancel
+      </button>
+      <button class="btn-primary" (click)="confirmUnverifiedConnection()">
+        Yes, Send Request
+      </button>
+    </div>
+  </div>
+</div>
 

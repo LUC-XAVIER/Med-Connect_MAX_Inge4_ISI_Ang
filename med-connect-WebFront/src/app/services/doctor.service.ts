@@ -44,6 +44,9 @@ export class DoctorService {
    */
   searchDoctors(params: {
     q?: string;
+    // Use `specialty` to match backend API query param.
+    // Keep `speciality` optional for backwards-compat calls but do not send it.
+    specialty?: string;
     speciality?: string;
     verified?: boolean;
     hospital?: string;
@@ -54,8 +57,10 @@ export class DoctorService {
     if (params.q) {
       httpParams = httpParams.set('q', params.q);
     }
-    if (params.speciality) {
-      httpParams = httpParams.set('speciality', params.speciality);
+    // Prefer the correctly spelled `specialty` query parameter expected by the backend.
+    const specialty = params.specialty || params.speciality;
+    if (specialty) {
+      httpParams = httpParams.set('specialty', specialty);
     }
     if (params.verified !== undefined) {
       httpParams = httpParams.set('verified', params.verified.toString());

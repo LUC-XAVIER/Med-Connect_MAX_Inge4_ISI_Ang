@@ -18,9 +18,9 @@
           <div class="user-profile" (click)="openProfileModal()" style="cursor: pointer;">
             <div class="profile-avatar">
               <img *ngIf="currentUser?.profile_picture" 
-                    [src]="getProfilePictureUrl(currentUser.profile_picture)" 
-                    [alt]="currentUser?.first_name + ' ' + currentUser?.last_name"
-                    onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                   [src]="getProfilePictureUrl(currentUser.profile_picture)" 
+                   [alt]="currentUser?.first_name + ' ' + currentUser?.last_name"
+                   onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
               <svg *ngIf="!currentUser?.profile_picture" width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
                 <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>

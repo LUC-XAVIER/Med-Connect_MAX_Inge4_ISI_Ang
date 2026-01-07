@@ -5,7 +5,9 @@ export interface Doctor {
   last_name: string;
   email: string;
   phone_number?: string;
-  speciality: string;
+  // Backend uses `specialty`; keep `speciality` for backwards compatibility
+  speciality?: string;
+  specialty?: string;
   license_number: string;
   years_of_experience?: number;
   consultation_fee?: number;

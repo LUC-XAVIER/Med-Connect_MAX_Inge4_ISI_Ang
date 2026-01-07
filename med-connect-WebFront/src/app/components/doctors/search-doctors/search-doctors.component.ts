@@ -41,6 +41,10 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
   showDoctorModal = false;
   selectedDoctor: Doctor | null = null;
 
+  // Unverified connection warning modal
+  showUnverifiedWarning = false;
+  pendingConnectionDoctor: Doctor | null = null;
+
   specialties: string[] = [
     'All Specialties',
     'General Practitioner',
@@ -148,7 +152,22 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
 
   searchDoctors(): void {
     if (!this.searchQuery.trim() && this.selectedspeciality === 'all' && this.selectedVerified === 'all' && !this.selectedHospital.trim()) {
-      this.loadTopRatedDoctors();
+      // When there is no search text and no filters, show all doctors
+      // (including unverified) so that patients can browse the full list.
+      this.isLoading = true;
+      this.doctorService.getAllDoctors().subscribe({
+        next: (doctors) => {
+          this.doctors = doctors;
+          this.applyFilters();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading doctors:', error);
+          this.doctors = [];
+          this.filteredDoctors = [];
+          this.isLoading = false;
+        }
+      });
       return;
     }
 
@@ -156,7 +175,8 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
     const filters: any = {};
     
     if (this.selectedspeciality !== 'all') {
-      filters.speciality = this.selectedspeciality;
+      // Map specialty filter to the backend's expected `specialty` query param.
+      filters.specialty = this.selectedspeciality;
     }
     if (this.selectedVerified === 'verified') {
       filters.verified = true;
@@ -168,12 +188,12 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
     }
 
     this.doctorService.searchDoctors({
-  q: this.searchQuery.trim(),
-  speciality: filters?.speciality,
-  verified: filters?.verified,
-  hospital: filters?.hospital,
-  limit: 50
-}).subscribe({
+      q: this.searchQuery.trim(),
+      specialty: filters?.specialty,
+      verified: filters?.verified,
+      hospital: filters?.hospital,
+      limit: 50
+    }).subscribe({
       next: (doctors) => {
         this.doctors = doctors;
         this.applyFilters();
@@ -193,7 +213,9 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
     const query = this.searchQuery.trim().toLowerCase();
 
     if (this.selectedspeciality !== 'all') {
-      filtered = filtered.filter(d => (d.speciality || '').toLowerCase() === this.selectedspeciality.toLowerCase());
+      filtered = filtered.filter(d =>
+        (d.speciality || (d as any).specialty || '').toLowerCase() === this.selectedspeciality.toLowerCase()
+      );
     }
 
     if (this.selectedVerified === 'verified') {
@@ -211,7 +233,7 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
     if (query) {
       filtered = filtered.filter(d =>
         `${d.first_name} ${d.last_name}`.toLowerCase().includes(query) ||
-        (d.speciality || '').toLowerCase().includes(query) ||
+        (d.speciality || (d as any).specialty || '').toLowerCase().includes(query) ||
         d.hospital_affiliation?.toLowerCase().includes(query)
       );
     }
@@ -219,6 +241,16 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
     filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
     this.filteredDoctors = filtered;
+  }
+
+  /**
+   * Safely get a numeric rating value for a doctor.
+   * Backend may return rating as string or null, so we normalize here.
+   */
+  getDoctorRating(doctor: Doctor): number {
+    const raw = (doctor as any).rating;
+    const value = Number(raw ?? 0);
+    return isNaN(value) ? 0 : value;
   }
 
   onspecialityChange(): void {
@@ -251,17 +283,47 @@ export class SearchDoctorsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/patient/appointments'], { queryParams: { doctorId: doctorUserId } });
   }
 
-  requestConnection(doctorUserId: number): void {
-    this.connectionService.requestConnection(doctorUserId).subscribe({
+  requestConnection(doctor: Doctor): void {
+    // If the doctor is unverified (anything other than explicit true),
+    // open a custom warning modal instead of using the native confirm.
+    if (doctor.verified !== true) {
+      this.pendingConnectionDoctor = doctor;
+      this.showUnverifiedWarning = true;
+      return;
+    }
+
+    this.sendConnectionRequest(doctor);
+  }
+
+  /**
+   * Actually send the connection request after the user confirms
+   * (used by both verified doctors and confirmed unverified ones).
+   */
+  private sendConnectionRequest(doctor: Doctor): void {
+    this.connectionService.requestConnection(doctor.user_id).subscribe({
       next: () => {
         alert('Connection request sent successfully!');
         this.loadConnectedDoctors();
+        this.showUnverifiedWarning = false;
+        this.pendingConnectionDoctor = null;
       },
       error: (error) => {
         console.error('Error requesting connection:', error);
         alert(error.error?.message || 'Failed to send connection request');
+        this.showUnverifiedWarning = false;
+        this.pendingConnectionDoctor = null;
       }
     });
+  }
+
+  confirmUnverifiedConnection(): void {
+    if (!this.pendingConnectionDoctor) return;
+    this.sendConnectionRequest(this.pendingConnectionDoctor);
+  }
+
+  cancelUnverifiedConnection(): void {
+    this.showUnverifiedWarning = false;
+    this.pendingConnectionDoctor = null;
   }
 
   getProfilePictureUrl(filePath: string | null | undefined): string {
